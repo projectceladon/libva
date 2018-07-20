@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-extern int trace_flag;
+extern int va_trace_flag;
 
 #define VA_TRACE_FLAG_LOG             0x1
 #define VA_TRACE_FLAG_BUFDATA         0x2
@@ -42,11 +42,11 @@ extern int trace_flag;
                                        VA_TRACE_FLAG_SURFACE_JPEG)
 
 #define VA_TRACE_LOG(trace_func,...)            \
-    if (trace_flag & VA_TRACE_FLAG_LOG) {       \
+    if (va_trace_flag & VA_TRACE_FLAG_LOG) {    \
         trace_func(__VA_ARGS__);                \
     }
 #define VA_TRACE_ALL(trace_func,...)            \
-    if (trace_flag) {                           \
+    if (va_trace_flag) {                        \
         trace_func(__VA_ARGS__);                \
     }
 
@@ -118,6 +118,34 @@ DLL_HIDDEN
 void va_TraceDestroyContext (
     VADisplay dpy,
     VAContextID context
+);
+
+DLL_HIDDEN
+void va_TraceCreateMFContext (
+    VADisplay dpy,
+    VAContextID *mf_context	/* out */
+);
+
+DLL_HIDDEN
+void va_TraceMFAddContext (
+    VADisplay dpy,
+    VAMFContextID mf_context,
+    VAContextID context
+);
+
+DLL_HIDDEN
+void va_TraceMFReleaseContext (
+    VADisplay dpy,
+    VAMFContextID mf_context,
+    VAContextID context
+);
+
+DLL_HIDDEN
+void va_TraceMFSubmit (
+    VADisplay dpy,
+    VAMFContextID mf_context,
+    VAContextID *contexts,
+    int num_contexts
 );
 
 DLL_HIDDEN

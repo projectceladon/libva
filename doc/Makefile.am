@@ -24,27 +24,44 @@ all: html
 install-data-local: install-html
 
 EXTRA_DIST = \
-	Doxyfile			\
+	Doxyfile.in			\
 	$(NULL)
 
 VA_HEADER_DIR   = $(top_srcdir)/va
 VA_HEADER_FILES = \
 	$(VA_HEADER_DIR)/va.h		\
 	$(VA_HEADER_DIR)/va_enc_h264.h	\
+	$(VA_HEADER_DIR)/va_enc_mpeg2.h	\
+	$(VA_HEADER_DIR)/va_enc_jpeg.h	\
+	$(VA_HEADER_DIR)/va_enc_hevc.h	\
+	$(VA_HEADER_DIR)/va_enc_vp8.h	\
+	$(VA_HEADER_DIR)/va_enc_vp9.h	\
+	$(VA_HEADER_DIR)/va_fei.h	\
+	$(VA_HEADER_DIR)/va_fei_h264.h	\
+	$(VA_HEADER_DIR)/va_fei_hevc.h	\
+	$(VA_HEADER_DIR)/va_dec_hevc.h	\
+	$(VA_HEADER_DIR)/va_dec_jpeg.h	\
+	$(VA_HEADER_DIR)/va_dec_vp8.h	\
+	$(VA_HEADER_DIR)/va_dec_vp9.h	\
 	$(VA_HEADER_DIR)/va_vpp.h	\
 	$(NULL)
 
-VA_HTML_FOOTER		= va_footer.html
-VA_HTML_FRAGMENTS	= $(VA_HTML_FOOTER)
+VA_HTML_FOOTER		= $(top_srcdir)/doc/va_footer.html
 
-export VA_HEADER_DIR
-export VA_HEADER_FILES
-export VA_HTML_FOOTER
-html-out/index.html: Doxyfile $(VA_HEADER_FILES) $(VA_HTML_FRAGMENTS)
-	$(DOXYGEN) $<
+Doxyfile: Doxyfile.in $(VA_HEADER_FILES) $(VA_HTML_FOOTER)
+	$(AM_V_GEN) $(SED) 					\
+           -e "s:\@PACKAGE_VERSION\@:$(PACKAGE_VERSION):"	\
+           -e "s:\@VA_HEADER_DIR\@:$(VA_HEADER_DIR):" 		\
+           -e "s:\@VA_HEADER_FILES\@:$(VA_HEADER_FILES):"	\
+           -e "s:\@VA_HTML_FOOTER\@:$(VA_HTML_FOOTER):"	\
+           -e "s:\@OUTDIR\@::" 				\
+           $< > $@
 
-if ENABLE_DOCS
+html-out/index.html: Doxyfile
+	$(AM_V_GEN) $(DOXYGEN)
+
 html: html-out/index.html
+
 install-html-local:
 	install -d $(DESTDIR)$(docdir)/html
 	for file in `ls html-out/` ; do \
@@ -55,9 +72,12 @@ install-html-local:
 		install -m 0644 html-out/$$file/* $(DESTDIR)$(docdir)/html/$$file; \
 	    fi ; \
 	done
+
 uninstall-local:
-	rm -rf $(DESTDIR)$(docdir)/html
-endif
+	$(RM) -rf $(DESTDIR)$(docdir)/html
+
+clean-local:
+	$(RM) -rf html-out latex
 
 # Extra clean files so that maintainer-clean removes *everything*
-MAINTAINERCLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in Doxyfile

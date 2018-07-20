@@ -130,7 +130,6 @@ dri2GetRenderingBuffer(VADriverContextP ctx, struct dri_drawable *dri_drawable)
     buffers = VA_DRI2GetBuffers(ctx->native_dpy, dri_drawable->x_drawable,
 			     &dri2_drawable->width, &dri2_drawable->height, 
                              attachments, i, &count);
-    assert(buffers);
     if (buffers == NULL)
         return NULL;
 
@@ -167,14 +166,14 @@ dri2Close(VADriverContextP ctx)
 {
     struct dri_state *dri_state = (struct dri_state *)ctx->drm_state;
 
-    free_drawable_hashtable(ctx);
+    va_dri_free_drawable_hashtable(ctx);
 
     if (dri_state->base.fd >= 0)
 	close(dri_state->base.fd);
 }
 
 Bool 
-isDRI2Connected(VADriverContextP ctx, char **driver_name)
+va_isDRI2Connected(VADriverContextP ctx, char **driver_name)
 {
     struct dri_state *dri_state = (struct dri_state *)ctx->drm_state;
     int major, minor;
@@ -216,8 +215,7 @@ isDRI2Connected(VADriverContextP ctx, char **driver_name)
     dri_state->close = dri2Close;
     gsDRI2SwapAvailable = (minor >= 2);
 
-    if (device_name)
-        Xfree(device_name);
+    Xfree(device_name);
 
     return True;
 

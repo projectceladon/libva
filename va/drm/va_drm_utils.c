@@ -44,7 +44,7 @@ static const struct driver_name_map g_driver_name_map[] = {
     { "nouveau",    7, "nouveau"  }, // Mesa Gallium driver
     { "radeon",     6, "r600"     }, // Mesa Gallium driver
     { "amdgpu",     6, "radeonsi" }, // Mesa Gallium driver
-    { NULL, }
+    { NULL,         0, NULL }
 };
 
 /* Returns the VA driver name for the active display */
@@ -88,7 +88,7 @@ int
 VA_DRM_IsRenderNodeFd(int fd)
 {
     struct stat st;
-    const char *name;
+    char *name;
 
     /* Check by device node */
     if (fstat(fd, &st) == 0)
@@ -96,8 +96,11 @@ VA_DRM_IsRenderNodeFd(int fd)
 
     /* Check by device name */
     name = drmGetDeviceNameFromFd(fd);
-    if (name)
-        return strncmp(name, "/dev/dri/renderD", 16) == 0;
+    if (name){
+        int ret = strncmp(name, "/dev/dri/renderD", 16) == 0;
+		drmFree(name);
+		return ret;
+	}
 
     /* Unrecoverable error */
     return -1;
