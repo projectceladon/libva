@@ -1,4 +1,4 @@
-# Copyright (c) 2007 Intel Corporation. All Rights Reserved.
+# Copyright (C) 2012 Intel Corporation. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -20,14 +20,9 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-AM_CPPFLAGS = -I$(top_srcdir)
+EXTRA_DIST = \
+	wayland-drm.xml		\
+	$(NULL)
 
-if BUILD_DUMMY_DRIVER
-dummy_drv_video_la_LTLIBRARIES	= dummy_drv_video.la
-dummy_drv_video_ladir		= $(LIBVA_DRIVERS_PATH)
-dummy_drv_video_la_LDFLAGS	= -module -avoid-version -no-undefined -Wl,--no-undefined
-dummy_drv_video_la_LIBADD	= 
-dummy_drv_video_la_DEPENDENCIES	= 
-dummy_drv_video_la_SOURCES	= dummy_drv_video.c object_heap.c
-noinst_HEADERS			= dummy_drv_video.h object_heap.h
-endif
+# Extra clean files so that maintainer-clean removes *everything*
+MAINTAINERCLEANFILES = Makefile.in

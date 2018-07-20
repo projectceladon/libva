@@ -26,6 +26,7 @@
 #include <xf86drm.h>
 #include "va_drm.h"
 #include "va_backend.h"
+#include "va_internal.h"
 #include "va_drmcommon.h"
 #include "va_drm_auth.h"
 #include "va_drm_utils.h"
@@ -101,23 +102,23 @@ vaGetDisplayDRM(int fd)
         goto error;
     drm_state->fd = fd;
 
-    pDriverContext = calloc(1, sizeof(*pDriverContext));
+    pDisplayContext = va_newDisplayContext();
+    if (!pDisplayContext)
+        goto error;
+
+    pDisplayContext->vaIsValid       = va_DisplayContextIsValid;
+    pDisplayContext->vaDestroy       = va_DisplayContextDestroy;
+    pDisplayContext->vaGetDriverName = va_DisplayContextGetDriverName;
+
+    pDriverContext = va_newDriverContext(pDisplayContext);
     if (!pDriverContext)
         goto error;
+
     pDriverContext->native_dpy   = NULL;
     pDriverContext->display_type = is_render_nodes ?
         VA_DISPLAY_DRM_RENDERNODES : VA_DISPLAY_DRM;
     pDriverContext->drm_state    = drm_state;
 
-    pDisplayContext = calloc(1, sizeof(*pDisplayContext));
-    if (!pDisplayContext)
-        goto error;
-
-    pDisplayContext->vadpy_magic     = VA_DISPLAY_MAGIC;
-    pDisplayContext->pDriverContext  = pDriverContext;
-    pDisplayContext->vaIsValid       = va_DisplayContextIsValid;
-    pDisplayContext->vaDestroy       = va_DisplayContextDestroy;
-    pDisplayContext->vaGetDriverName = va_DisplayContextGetDriverName;
     return pDisplayContext;
 
 error:
