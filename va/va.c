@@ -410,7 +410,7 @@ static VAStatus va_openDriver(VADisplay dpy, char *driver_name)
                 { VA_MAJOR_VERSION, 2 },
                 { VA_MAJOR_VERSION, 1 },
                 { VA_MAJOR_VERSION, 0 },
-                { -1, -1}
+                { -1, }
             };
 
             for (i = 0; compatible_versions[i].major >= 0; i++) {
@@ -641,7 +641,7 @@ VAStatus vaSetDriverName(
     }
 
     found = 0;
-    for (i = 0; i < (int)(sizeof(prefer_driver_list) / sizeof(char *)); i++) {
+    for (i = 0; i < sizeof(prefer_driver_list) / sizeof(char *); i++) {
         if (strlen(prefer_driver_list[i]) != strlen(driver_name))
             continue;
         if (!strncmp(prefer_driver_list[i], driver_name, strlen(driver_name))) {
@@ -979,7 +979,7 @@ va_impl_query_surface_attributes(
         { VASurfaceAttribMinHeight,     VAGenericValueTypeInteger },
         { VASurfaceAttribMaxHeight,     VAGenericValueTypeInteger },
         { VASurfaceAttribMemoryType,    VAGenericValueTypeInteger },
-        { VASurfaceAttribNone,          VAGenericValueTypeInteger }
+        { VASurfaceAttribNone, }
     };
 
     if (!out_attribs || !out_num_attribs_ptr)
