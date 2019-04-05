@@ -37,7 +37,7 @@
  *
  * The minor version of VA-API (2, if %VA_VERSION is 1.2.3)
  */
-#define VA_MINOR_VERSION    3
+#define VA_MINOR_VERSION    5
 
 /**
  * VA_MICRO_VERSION:
