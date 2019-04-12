@@ -1260,7 +1260,12 @@ typedef enum {
     VASurfaceAttribMaxHeight,
     /** \brief Surface memory type expressed in bit fields (int, read/write). */
     VASurfaceAttribMemoryType,
-    /** \brief External buffer descriptor (pointer, write). */
+    /** \brief External buffer descriptor (pointer, write).
+     *
+     * Refer to the documentation for the memory type being created to
+     * determine what descriptor structure to pass here.  If not otherwise
+     * stated, the common VASurfaceAttribExternalBuffers should be used.
+     */
     VASurfaceAttribExternalBufferDescriptor,
     /** \brief Surface usage hint, gives the driver a hint of intended usage 
      *  to optimize allocation (e.g. tiling) (int, read/write). */
@@ -3916,6 +3921,10 @@ VAStatus vaQuerySurfaceError(
  * @deprecated Use I420 instead.
  */
 #define VA_FOURCC_IYUV          0x56555949
+/**
+ * 10-bit Pixel RGB formats.
+ */
+#define VA_FOURCC_A2R10G10B10   0x30335241 /* VA_FOURCC('A','R','3','0') */
 
 /* byte order */
 #define VA_LSB_FIRST		1
