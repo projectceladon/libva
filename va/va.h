@@ -827,6 +827,16 @@ typedef struct _VAConfigAttrib {
  * and reuse quality_factor in \c VAEncMiscParameterRateControl
  * */
 #define VA_RC_QVBR                      0x00000400
+/** \brief Average VBR
+ *  Average variable bitrate control algorithm focuses on overall encoding
+ *  quality while meeting the specified target bitrate, within the accuracy
+ *  range, after a convergence period.
+ *  bits_per_second in VAEncMiscParameterRateControl is target bitrate for AVBR.
+ *  Convergence is specified in the unit of frame.
+ *  window_size in VAEncMiscParameterRateControl is equal to convergence for AVBR.
+ *  Accuracy is in the range of [1,100], 1 means one percent, and so on. 
+ *  target_percentage in VAEncMiscParameterRateControl is equal to accuracy for AVBR. */
+#define VA_RC_AVBR                      0x00000800
 
 /**@}*/
 
@@ -1250,7 +1260,12 @@ typedef enum {
     VASurfaceAttribMaxHeight,
     /** \brief Surface memory type expressed in bit fields (int, read/write). */
     VASurfaceAttribMemoryType,
-    /** \brief External buffer descriptor (pointer, write). */
+    /** \brief External buffer descriptor (pointer, write).
+     *
+     * Refer to the documentation for the memory type being created to
+     * determine what descriptor structure to pass here.  If not otherwise
+     * stated, the common VASurfaceAttribExternalBuffers should be used.
+     */
     VASurfaceAttribExternalBufferDescriptor,
     /** \brief Surface usage hint, gives the driver a hint of intended usage 
      *  to optimize allocation (e.g. tiling) (int, read/write). */
@@ -1738,6 +1753,8 @@ typedef enum
     VAEncMiscParameterTypeSkipFrame     = 9,
     /** \brief Buffer type used for region-of-interest (ROI) parameters. */
     VAEncMiscParameterTypeROI           = 10,
+    /** \brief Buffer type used to express a maximum frame size (in bytes) settings for multiple pass. */
+    VAEncMiscParameterTypeMultiPassFrameSize       = 11,
     /** \brief Buffer type used for temporal layer structure */
     VAEncMiscParameterTypeTemporalLayerStructure   = 12,
     /** \brief Buffer type used for dirty region-of-interest (ROI) parameters. */
@@ -2104,6 +2121,31 @@ typedef struct _VAEncMiscParameterBufferMaxFrameSize {
     /** \brief Reserved bytes for future use, must be zero */
     uint32_t                va_reserved[VA_PADDING_LOW];
 } VAEncMiscParameterBufferMaxFrameSize;
+
+/**
+ * \brief Maximum frame size (in bytes) settings for multiple pass.
+ *
+ * This misc parameter buffer defines the maximum size of a frame (in
+ * bytes) settings for multiple pass. currently only AVC encoder can
+ * support this settings in multiple pass case. If the frame size exceeds
+ * this size, the encoder will do more pak passes to adjust the QP value
+ * to control the frame size.
+ */
+typedef struct _VAEncMiscParameterBufferMultiPassFrameSize {
+    /** \brief Type. Shall be set to #VAEncMiscParameterTypeMultiPassMaxFrameSize. */
+    VAEncMiscParameterType      type;
+    /** \brief Maximum size of a frame (in byte) */
+    uint32_t                max_frame_size;
+    /** \brief Reserved bytes for future use, must be zero */
+    uint32_t                reserved;
+    /** \brief number of passes, every pass has different QP, currently AVC encoder can support up to 4 passes */
+    uint8_t                 num_passes;
+    /** \brief delta QP list for every pass */
+    uint8_t                *delta_qp;
+
+    /** \brief Reserved bytes for future use, must be zero */
+    unsigned long           va_reserved[VA_PADDING_LOW];
+} VAEncMiscParameterBufferMultiPassFrameSize;
 
 /**
  * \brief Encoding quality level.
@@ -3879,6 +3921,10 @@ VAStatus vaQuerySurfaceError(
  * @deprecated Use I420 instead.
  */
 #define VA_FOURCC_IYUV          0x56555949
+/**
+ * 10-bit Pixel RGB formats.
+ */
+#define VA_FOURCC_A2R10G10B10   0x30335241 /* VA_FOURCC('A','R','3','0') */
 
 /* byte order */
 #define VA_LSB_FIRST		1
