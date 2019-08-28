@@ -51,7 +51,7 @@
 #include <sys/syscall.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <time.h>
+#include <sys/time.h>
 #include <errno.h>
 
 /*
@@ -2038,6 +2038,29 @@ static void va_TraceVAIQMatrixBufferMPEG4(
     return;
 }
 
+static void va_TraceVAEncSequenceParameterBufferMPEG2(
+    VADisplay dpy,
+    VAContextID context,
+    VABufferID buffer,
+    VABufferType type,
+    unsigned int size,
+    unsigned int num_elements,
+    void *data)
+{
+    VAEncSequenceParameterBufferMPEG2 *p = (VAEncSequenceParameterBufferMPEG2 *)data;
+    DPY2TRACECTX(dpy, context, VA_INVALID_ID);
+
+    va_TraceMsg(trace_ctx, "\t--VAEncSequenceParameterBufferMPEG2\n");
+
+    va_TraceMsg(trace_ctx, "\tintra_period = %d\n", p->intra_period);
+    va_TraceMsg(trace_ctx, "\tbits_per_second = %d\n", p->bits_per_second);
+    va_TraceMsg(trace_ctx, "\tframe_rate = %d\n", p->frame_rate);
+    va_TraceMsg(trace_ctx, "\tvbv_buffer_size = %d\n", p->vbv_buffer_size);
+    va_TraceMsg(trace_ctx, NULL);
+
+    return;
+}
+
 static void va_TraceVAEncSequenceParameterBufferMPEG4(
     VADisplay dpy,
     VAContextID context,
@@ -3271,6 +3294,7 @@ static void va_TraceVAEncMiscParameterBuffer(
     }
     case VAEncMiscParameterTypeROI:
     {
+        int i;
         VAEncMiscParameterBufferROI *p = (VAEncMiscParameterBufferROI *)tmp->data;
 
         va_TraceMsg(trace_ctx, "\t--VAEncMiscParameterBufferROI\n");
@@ -3278,7 +3302,7 @@ static void va_TraceVAEncMiscParameterBuffer(
         va_TraceMsg(trace_ctx, "\tmax_delta_qp = %d\n", p->max_delta_qp);
         va_TraceMsg(trace_ctx, "\tmin_delta_qp = %d\n", p->min_delta_qp);
         va_TraceMsg(trace_ctx, "\troi_flags.bits.roi_value_is_qp_delta = %d\n", p->roi_flags.bits.roi_value_is_qp_delta);
-        for (int i = 0; i < p->num_roi; i++) {
+        for (i = 0; i < p->num_roi; i++) {
             va_TraceMsg(trace_ctx, "\troi[%d].roi_rectangle.x      = %d\n", i, p->roi[i].roi_rectangle.x);
             va_TraceMsg(trace_ctx, "\troi[%d].roi_rectangle.y      = %d\n", i, p->roi[i].roi_rectangle.y);
             va_TraceMsg(trace_ctx, "\troi[%d].roi_rectangle.width  = %d\n", i, p->roi[i].roi_rectangle.width);
@@ -3297,6 +3321,56 @@ static void va_TraceVAEncMiscParameterBuffer(
         va_TraceMsg(trace_ctx, "\tintra_insertion_location = %d\n", p->intra_insertion_location);
         va_TraceMsg(trace_ctx, "\tintra_insert_size = %d\n", p->intra_insert_size);
         va_TraceMsg(trace_ctx, "\tqp_delta_for_inserted_intra = %d\n", p->qp_delta_for_inserted_intra);
+        break;
+    }
+    case VAEncMiscParameterTypeEncQuality:
+    {
+        int i;
+        VAEncMiscParameterEncQuality *p = (VAEncMiscParameterEncQuality *)tmp->data;
+
+        va_TraceMsg(trace_ctx, "\t--VAEncMiscParameterEncQuality\n");
+        va_TraceMsg(trace_ctx, "\tuseRawPicForRef = %d\n",p->useRawPicForRef);
+        va_TraceMsg(trace_ctx, "\tskipCheckDisable = %d\n",p->skipCheckDisable);
+        va_TraceMsg(trace_ctx, "\tFTQOverride = %d\n",p->FTQOverride);
+        va_TraceMsg(trace_ctx, "\tFTQEnable = %d\n",p->FTQEnable);
+        va_TraceMsg(trace_ctx, "\tFTQSkipThresholdLUTInput = %d\n",p->FTQSkipThresholdLUTInput);
+        va_TraceMsg(trace_ctx, "\tNonFTQSkipThresholdLUTInput = %d\n",p->NonFTQSkipThresholdLUTInput);
+        va_TraceMsg(trace_ctx, "\tReservedBit = %d\n",p->ReservedBit);
+        va_TraceMsg(trace_ctx, "\tdirectBiasAdjustmentEnable = %d\n",p->directBiasAdjustmentEnable);
+        va_TraceMsg(trace_ctx, "\tglobalMotionBiasAdjustmentEnable = %d\n",p->globalMotionBiasAdjustmentEnable);
+        va_TraceMsg(trace_ctx, "\tHMEMVCostScalingFactor = %d\n",p->HMEMVCostScalingFactor);
+        va_TraceMsg(trace_ctx, "\tHMEDisable = %d\n",p->HMEDisable);
+        va_TraceMsg(trace_ctx, "\tSuperHMEDisable = %d\n",p->SuperHMEDisable);
+        va_TraceMsg(trace_ctx, "\tUltraHMEDisable = %d\n",p->UltraHMEDisable);
+        va_TraceMsg(trace_ctx, "\tPanicModeDisable = %d\n",p->PanicModeDisable);
+        va_TraceMsg(trace_ctx, "\tForceRepartitionCheck = %d\n",p->ForceRepartitionCheck);
+        if (p->FTQSkipThresholdLUTInput) {
+            va_TraceMsg(trace_ctx, "\tFTQSkipThresholdLUT[52]=\n");
+            for (i = 0; i < 52; i++) {
+                va_TraceMsg(trace_ctx, "\t%d", p->FTQSkipThresholdLUT[i]);
+                if ((i + 1) % 8 == 0)
+                    TRACE_NEWLINE();
+            }
+            va_TracePrint(trace_ctx, "\n");
+        }
+        if (p->NonFTQSkipThresholdLUTInput) {
+            va_TraceMsg(trace_ctx, "\tNonFTQSkipThresholdLUT[52]=\n");
+            for (i = 0; i < 52; i++) {
+                va_TraceMsg(trace_ctx, "\t%d", p->NonFTQSkipThresholdLUT[i]);
+                if ((i + 1) % 8 == 0)
+                    TRACE_NEWLINE();
+            }
+            va_TracePrint(trace_ctx, "\n");
+        }
+        break;
+    }
+    case VAEncMiscParameterTypeSkipFrame:
+    {
+        VAEncMiscParameterSkipFrame *p = (VAEncMiscParameterSkipFrame *)tmp->data;
+        va_TraceMsg(trace_ctx, "\t--VAEncMiscParameterSkipFrame\n");
+        va_TraceMsg(trace_ctx, "\tskip_frame_flag = %d\n", p->skip_frame_flag);
+        va_TraceMsg(trace_ctx, "\tnum_skip_frames = %d\n", p->num_skip_frames);
+        va_TraceMsg(trace_ctx, "\tsize_skip_frames = %d\n", p->size_skip_frames);
         break;
     }
     default:
@@ -3995,10 +4069,14 @@ static void va_TraceMPEG2Buf(
     case VAEncCodedBufferType:
         break;
     case VAEncSequenceParameterBufferType:
+        va_TraceVAEncSequenceParameterBufferMPEG2(dpy, context, buffer, type, size, num_elements, pbuf);
         break;
     case VAEncPictureParameterBufferType:
         break;
     case VAEncSliceParameterBufferType:
+        break;
+    case VAEncMiscParameterBufferType:
+        va_TraceVAEncMiscParameterBuffer(dpy, context, buffer, type, size, num_elements, pbuf);
         break;
     default:
         break;
@@ -4156,7 +4234,7 @@ static void va_TraceVAEncSliceParameterBufferJPEG(
     va_TraceMsg(trace_ctx, "\trestart_interval = 0x%04x\n", p->restart_interval);
     va_TraceMsg(trace_ctx, "\tnum_components = 0x%08x\n", p->num_components);
     for (i=0; i<4; i++) {
-        va_TraceMsg(trace_ctx, "\tcomponents[%i] =\n ");
+        va_TraceMsg(trace_ctx, "\tcomponents[%i] =\n ", i);
         va_TraceMsg(trace_ctx, "\t\tcomponent_selector = %d\n", p->components[i].component_selector);
         va_TraceMsg(trace_ctx, "\t\tdc_table_selector = %d\n", p->components[i].dc_table_selector);
         va_TraceMsg(trace_ctx, "\t\tac_table_selector = %d\n", p->components[i].ac_table_selector);
@@ -4933,6 +5011,12 @@ void va_TraceRenderPicture(
             }
             break;
 
+        case VAProfileHEVCMain12:
+        case VAProfileHEVCMain422_10:
+        case VAProfileHEVCMain422_12:
+        case VAProfileHEVCMain444:
+        case VAProfileHEVCMain444_10:
+        case VAProfileHEVCMain444_12:
         case VAProfileHEVCMain:
         case VAProfileHEVCMain10:
             for (j=0; j<num_elements; j++) {
@@ -5208,5 +5292,16 @@ void va_TracePutSurface (
     va_TraceMsg(trace_ctx, "\tflags = 0x%08x\n", flags);
     va_TraceMsg(trace_ctx, NULL);
 
+    DPY2TRACE_VIRCTX_EXIT(pva_trace);
+}
+
+void va_TraceStatus(VADisplay dpy, const char * funcName, VAStatus status)
+{
+    if(status == VA_STATUS_SUCCESS)
+        return;
+
+    DPY2TRACE_VIRCTX(dpy);
+
+    va_TraceMsg(trace_ctx, "=========%s ret = %s, %s \n",funcName, vaStatusStr(status), vaErrorStr(status));
     DPY2TRACE_VIRCTX_EXIT(pva_trace);
 }

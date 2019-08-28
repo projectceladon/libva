@@ -214,10 +214,18 @@ typedef int VAStatus;	/** Return status type from functions */
 #define VA_STATUS_ERROR_NOT_ENOUGH_BUFFER       0x00000025
 #define VA_STATUS_ERROR_UNKNOWN			0xFFFFFFFF
 
-/** De-interlacing flags for vaPutSurface() */
+/** 
+ * 1. De-interlacing flags for vaPutSurface() 
+ * 2. Surface sample type for input/output surface flag
+ *    - Progressive: VA_FRAME_PICTURE
+ *    - Interleaved: VA_TOP_FIELD_FIRST, VA_BOTTOM_FIELD_FIRST
+ *    - Field: VA_TOP_FIELD, VA_BOTTOM_FIELD
+*/
 #define VA_FRAME_PICTURE        0x00000000 
 #define VA_TOP_FIELD            0x00000001
 #define VA_BOTTOM_FIELD         0x00000002
+#define VA_TOP_FIELD_FIRST      0x00000004
+#define VA_BOTTOM_FIELD_FIRST   0x00000008
 
 /**
  * Enabled the positioning/cropping/blending feature:
@@ -748,6 +756,11 @@ typedef enum
      * support for QP info for buffer #VAEncQpBuffer.
      */
     VAConfigAttribQPBlockSize            = 37,
+    /**
+     * \brief encode max frame size attribute. Read-only
+     * attribute value \c VAConfigAttribValMaxFrameSize represent max frame size support   
+     */
+    VAConfigAttribMaxFrameSize           = 38,
     /**@}*/
     VAConfigAttribTypeMax
 } VAConfigAttribType;
@@ -932,6 +945,23 @@ typedef union _VAConfigAttribValDecJPEG {
 /** \brief Driver supports an arbitrary number of rows per slice. */
 #define VA_ENC_SLICE_STRUCTURE_ARBITRARY_ROWS           0x00000010
 /**@}*/
+
+/** \brief Attribute value for VAConfigAttribMaxFrameSize */
+typedef union _VAConfigAttribValMaxFrameSize {
+    struct {
+        /** \brief support max frame size 
+          * if max_frame_size == 1, VAEncMiscParameterTypeMaxFrameSize/VAEncMiscParameterBufferMaxFrameSize
+          * could be used to set the frame size, if multiple_pass also equal 1, VAEncMiscParameterTypeMultiPassFrameSize
+          * VAEncMiscParameterBufferMultiPassFrameSize could be used to set frame size and pass information 
+          */ 
+        uint32_t max_frame_size : 1;
+        /** \brief multiple_pass support */
+        uint32_t multiple_pass  : 1;
+        /** \brief reserved bits for future, must be zero*/
+        uint32_t reserved       :30;
+    } bits;
+    uint32_t value;
+} VAConfigAttribValMaxFrameSize;
 
 /** \brief Attribute value for VAConfigAttribEncJPEG */
 typedef union _VAConfigAttribValEncJPEG {
@@ -2114,7 +2144,8 @@ typedef struct _VAEncMiscParameterHRD
  */
 typedef struct _VAEncMiscParameterBufferMaxFrameSize {
     /** \brief Type. Shall be set to #VAEncMiscParameterTypeMaxFrameSize. */
-    VAEncMiscParameterType      type;
+    /** duplicated with VAEncMiscParameterBuffer, should be deprecated*/
+    va_deprecated VAEncMiscParameterType      type;
     /** \brief Maximum size of a frame (in bits). */
     uint32_t                max_frame_size;
 
@@ -2133,7 +2164,8 @@ typedef struct _VAEncMiscParameterBufferMaxFrameSize {
  */
 typedef struct _VAEncMiscParameterBufferMultiPassFrameSize {
     /** \brief Type. Shall be set to #VAEncMiscParameterTypeMultiPassMaxFrameSize. */
-    VAEncMiscParameterType      type;
+    /** duplicated with VAEncMiscParameterBuffer, should be deprecated*/
+    va_deprecated VAEncMiscParameterType      type;
     /** \brief Maximum size of a frame (in byte) */
     uint32_t                max_frame_size;
     /** \brief Reserved bytes for future use, must be zero */
@@ -2182,17 +2214,18 @@ typedef struct _VAEncMiscParameterQuantization
         struct
         {
 	    /* \brief disable trellis for all frames/fields */
-            uint64_t disable_trellis : 1;
+            uint32_t disable_trellis : 1;
 	    /* \brief enable trellis for I frames/fields */
-            uint64_t enable_trellis_I : 1;
+            uint32_t enable_trellis_I : 1;
 	    /* \brief enable trellis for P frames/fields */
-            uint64_t enable_trellis_P : 1;
+            uint32_t enable_trellis_P : 1;
 	    /* \brief enable trellis for B frames/fields */
-            uint64_t enable_trellis_B : 1;
-            uint64_t reserved : 28;
+            uint32_t enable_trellis_B : 1;
+            uint32_t reserved : 28;
         } bits;
-        uint64_t value;
+        uint32_t value;
     } quantization_flags;
+    uint32_t va_reserved;
 } VAEncMiscParameterQuantization;
 
 /**
@@ -3925,6 +3958,41 @@ VAStatus vaQuerySurfaceError(
  * 10-bit Pixel RGB formats.
  */
 #define VA_FOURCC_A2R10G10B10   0x30335241 /* VA_FOURCC('A','R','3','0') */
+/**
+ * 10-bit Pixel BGR formats.
+ */
+#define VA_FOURCC_A2B10G10R10   0x30334241 /* VA_FOURCC('A','B','3','0') */
+
+/** Y8: 8-bit greyscale.
+ *
+ * Only a single sample, 8 bit Y plane for monochrome images
+ */
+#define VA_FOURCC_Y8            0x20203859
+/** Y16: 16-bit greyscale.
+ *
+ * Only a single sample, 16 bit Y plane for monochrome images
+ */
+#define VA_FOURCC_Y16           0x20363159
+/** VYUV: packed 8-bit YUV 4:2:2.
+ *
+ * Four bytes per pair of pixels: V, Y, U, V.
+ */
+#define VA_FOURCC_VYUY          0x59555956
+/** YVYU: packed 8-bit YUV 4:2:2.
+ *
+ * Four bytes per pair of pixels: Y, V, Y, U.
+ */
+#define VA_FOURCC_YVYU          0x55595659
+/** AGRB64: three-plane 16-bit ARGB 16:16:16:16
+ *
+ * The four planes contain: alpha, red, green, blue respectively.
+ */
+#define VA_FOURCC_ARGB64        0x34475241
+/** ABGR64: three-plane 16-bit ABGR 16:16:16:16
+ *
+ * The four planes contain: alpha, blue, green, red respectively.
+ */
+#define VA_FOURCC_ABGR64        0x34474241
 
 /* byte order */
 #define VA_LSB_FIRST		1

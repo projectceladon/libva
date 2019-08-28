@@ -681,7 +681,7 @@ typedef struct _VAProcFilterValueRange {
 typedef struct _VAProcColorProperties {
     /** Chroma sample location.\c VA_CHROMA_SITING_VERTICAL_XXX | VA_CHROMA_SITING_HORIZONTAL_XXX */
     uint8_t chroma_sample_location;
-    /** Chroma sample location. \c VA_SOURCE_RANGE_XXX*/
+    /** Color range. \c VA_SOURCE_RANGE_XXX*/
     uint8_t color_range;
     /** Colour primaries.
      *
@@ -705,7 +705,7 @@ typedef struct _VAProcColorProperties {
     uint8_t reserved[3];
 } VAProcColorProperties;
 
-/** \berief Describes High Dynamic Range Meta Data for HDR10.
+/** \brief Describes High Dynamic Range Meta Data for HDR10.
  *
  *  Specifies the colour volume(the colour primaries, white point and luminance range) of
  *  a display considered to be the mastering display for the associated video content -e.g.,
@@ -1012,15 +1012,56 @@ typedef struct _VAProcPipelineParameterBuffer {
     /**
      * \brief Flag to indicate the input surface flag
      *
-     * bit0: 0 non-protected 1: protected
-     * bit 1~31 for future
+     * bit0~3: Surface sample type
+     * - 0000: Progressive --> VA_FRAME_PICTURE
+     * - 0001: Single Top Field --> VA_TOP_FIELD
+     * - 0010: Single Bottom Field --> VA_BOTTOM_FIELD  
+     * - 0100: Interleaved Top Field First --> VA_TOP_FIELD_FIRST
+     * - 1000: Interleaved Bottom Field First --> VA_BOTTOM_FIELD_FIRST
+     *
+     * For interlaced scaling, examples as follow:
+     * - 1. Interleaved to Interleaved (Suppose input is top field first)
+     *   -- set input_surface_flag as VA_TOP_FIELD_FIRST
+     *   -- set output_surface_flag as VA_TOP_FIELD_FIRST
+     * - 2. Interleaved to Field (Suppose input is top field first)
+     *   An interleaved frame need to be passed twice.
+     *   First cycle to get the first field:
+     *   -- set input_surface_flag as VA_TOP_FIELD_FIRST
+     *   -- set output_surface_flag as VA_TOP_FIELD
+     *   Second cycle to get the second field:
+     *   -- set input_surface_flag as VA_TOP_FIELD_FIRST
+     *   -- set output_surface_flag as VA_BOTTOM_FIELD
+     * - 3. Field to Interleaved (Suppose first field is top field)
+     *   -- create two surfaces, one for top field, the other for bottom field
+     *   -- set surface with the first field surface id
+     *   -- set backward_reference with the second field surface id
+     *   -- set input_surface_flag as VA_TOP_FIELD
+     *   -- set output_surface_flag as VA_TOP_FIELD_FIRST
+     * - 4. Field to Field: 
+     *   -- set flag according to each frame.
+     *
+     * bit31: Surface encryption
+     * - 0: non-protected  
+     * - 1: protected
+     *
+     * bit4~30 for future
      */
     uint32_t        input_surface_flag;
     /**
      * \brief Flag to indicate the output surface flag
      *
-     * bit0: 0 non-protected  1: protected
-     * bit 1~31 for future
+     * bit0~3: Surface sample type
+     * - 0000: Progressive --> VA_FRAME_PICTURE
+     * - 0001: Top Field --> VA_TOP_FIELD
+     * - 0010: Bottom Field --> VA_BOTTOM_FIELD  
+     * - 0100: Top Field First --> VA_TOP_FIELD_FIRST
+     * - 1000: Bottom Field First --> VA_BOTTOM_FIELD_FIRST
+     *
+     * bit31: Surface encryption
+     * - 0: non-protected  
+     * - 1: protected
+     *
+     * bit4~30 for future
      */
     uint32_t        output_surface_flag;
     /**
