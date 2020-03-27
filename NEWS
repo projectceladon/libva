@@ -1,0 +1,268 @@
+libva NEWS -- summary of user visible changes.  2019-07-05
+Copyright (C) 2009-2019 Intel Corporation
+
+version 2.5.0 - 05.Jul.2019
+* Correct the comment of color_range.
+* Add VA_FOURCC_A2B10G10R10 for format a2b10g10r10.
+* Adjust VAEncMiscParameterQuantization structure to be align with VAEncMiscParameterBuffer(possible to impact BC)
+* Add attribute for max frame size
+* Add va_footer.html into distribution build
+* va_trace: hevc profiles added
+* Add new definition for input/output surface flag
+* va/va_trace: add trace support for VAEncMiscParameterTypeSkipFrame structure.
+* va/va_trace: add MPEG2 trace support for MiscParam and SequenceParam
+* va_openDriver: check strdup return value
+* Mark some duplicated field as deprecated
+* Add return value into logs
+* va/va_trace: add trace support for VAEncMiscParameterEncQuality structure.
+* Add newformat foucc defination
+* va_backend: remove unneeded linux/videodev2.h include
+* va_trace: add missing <sys/time.h> include
+* configure: don't build glx if VA/X11 isn't built
+* va/va_trace: unbreak with C89 after b3694671c784
+* [common] Add A2RGB10 fourcc definition
+* build: meson: enables va messaging and visibility
+* va/va_trace: add trace support for RIR(rolling intra refresh).
+* va/va_trace: add trace support for ROI(region of interest).
+
+version 2.4.0 - 25.Jan.2019
+* va_TraceSurface support for VA_FOURCC_P010
+* Add pointer to struct wl_interface for driver to use
+* (integrate) va: fix new line symbol in error message
+* av: avoid driver path truncation
+* Fix compilation warning (uninit and wrong variable types) for Android O MR1
+* Allow import of the DRM PRIME 2 memory type
+* android: ignore unimportant compile warnnings
+* compile: fix sign/unsign compare in va_trace.c
+* android: replace utils/Log.h with log/log.h
+* High Dynamic Range Tone Mapping: Add a new filter for input metadata and some comments.
+* Remove restrictions on vaSetDriverName()
+
+version 2.3.0 - 30.Sep.2018
+* Bump VA-API version to 1.3.0 and libva to 2.3.0
+* Add max frame size parameters for multiple pass case in legacy mode
+* Add new BRC mode AVBR
+* Add new interface for High Dynamic Range tone mapping
+* Add missing enum to string conversions
+* Add hevc subsets parameters structure
+* Add Customized Noise Reduction (HVS) interfaces
+* Add new BRC mode definition QVBR
+* Add more complete colour properties for use in VPP
+
+Version 2.2.0 - 12.July.2018
+* Bump VA-API version to 1.2.0 and libva to 2.2.0
+* Add support for hevc range extension decoding
+* Add support for fast intra prediction in HEVC FEI
+* Add 10/12-bit YUV render target formats
+* Add fourcc code for Y210/Y216/Y410/Y416/RGB565/BGR565
+* Add VA_STATUS_ERROR_NOT_ENOUGH_BUFFER
+* Add VA_SURFACE_ATTRIB_USAGE_HINT_EXPORT
+* Improve documentation
+
+Version 2.1.0 - 12.Feb.2018
+* Bump VA-API version to 1.1.0 and libva to 2.1.0
+* Add API for multi-frame processing
+* Add entrypoint VAEntrypointStats for Statistics
+* Add data structures for HEVC FEI support
+* Add new attributes for decoding/encoding/video processing
+* Add new VPP filter for Total Color Correction
+* Add blending interface in VPP
+* Add rotation interface in VPP
+* Add mirroring interface in VPP
+* Add Chroma siting flags in VPP
+* Add new color standard definitions
+* Add new interface for exporting surface
+* Add message callbacks for drivers to use
+
+Version 2.0.0 - 21.Oct.2017
+* Bump VA-API version to 1.0.0 and libva to 2.0.0
+* Add new API for H264 FEI support
+* Add definition of VA_FOURCC_I420
+* Add functions for converting common enums to strings
+* Deprecate H.264 baseline profile and FMO support
+* Deprecate packed misc packed header flag
+* Delete libva-tpi and libva-egl backends
+* Refine VASliceParameterBufferHEVC, VAEncMiscParameterBuffer
+* Fix errors in VAConfigAttribValEncROI, VAEncMacroblockParameterBufferH264
+* Fix race condition in wayland support
+* Rename vaMessageCallback to VAMessageCallback
+* Make logging callbacks library-safe
+
+Version 1.8.3 - 28.Jun.2017
+* Bump libva to 1.8.3
+* Fix build issue on Android
+* Remove the dummy driver
+* Add traces for MB rate control / temporal layer
+* Set verbosity level between {0, 1, 2} by setting the variable LIBVA_MESSAGING_LEVEL
+  in /etc/libva.conf or by setting the environment variable LIBVA_MESSAGING_LEVEL.
+
+Version 1.8.2 - 22.May.2017
+* Bump libva to 1.8.2
+
+Version 1.8.1 - 10.Apr.2017
+* Bump libva to 1.8.1
+
+Version 1.8.0 - 31.March.2017
+* Bump VA API version to 0.40
+* API: Change vaRenderPicture semantics that vaRenderPicture no longer deletes the passed buffer automatically.
+* API: Add VA_FOURCC_I010 for 10bit surface
+* API: Add vaSetErrorCallback and vaSetInfoCallback for error and info message.
+* va/drm: Update the support for Mesa Gallium driver
+* va/drm: Fix authentication check for /dev/dri/card0
+* Move all utilities and tests to libva-utils (https://github.com/01org/libva-utils)
+
+Version 1.7.3 - DD.Nov.2016
+* Bump VA API version to 0.39.4
+* API: add support for bitrate control per temporal layer
+* API: update the usage for framerate in VAEncMiscParameterFrameRate to support non-integer frame-rate
+* Add has_prime_sharing flag in VADriverVTableWayland to indicate if buffer sharing with prime fd can
+  be used in the backend driver
+
+Version 1.7.2 - 05.Sep.2016
+* Bump VA API version to 0.39.3
+* API: add support for ROI
+* Add support for VP9 encoder in VA tracer
+* Refine test cases
+* Fix the issue of not properly terminating the parsed environment values with '\0'
+  https://bugs.freedesktop.org/show_bug.cgi?id=96677
+
+Version 1.7.1 - 21.Jun.2016
+* Bump VA API version to 0.39.2
+* API: add support for VP9 8bit encode
+* API: add support for low power/high performance encode
+* API: add support for encoding ROI attribute
+* API: add support for macroblock based rate control
+* Fix VA tracer to support multiple contexts in one instance
+
+Version 1.7.0 - 15.Mar.2016
+* Bump VA API version to 0.39
+* Add support for VP9 10bit decode API
+* Allow libva to load the vaapi driver provided by Mesa Gallium for nouveau and radeon
+* Fix libva-glx against OpenGL 3.1 or above
+
+Version 1.6.2 - 15.Dec.2015
+* Bump VA API version to 0.38.1
+* Add new RT format for 16 bits per channel memory layout(P010,P016): VA_RT_FORMAT_YUV420_10BPP
+* Add new fourcc codes: VA_FOURCC_P010, VA_FOURCC_P016, VA_FOURCC_YV16
+* Fix crash if user doesn't have right to access the DRI device
+* Fix uninitialized x11_screen driver context member for X11 output
+  https://bugs.freedesktop.org/show_bug.cgi?id=61603
+* Fix the issue of not to use LIBVA_DRIVER_NAME
+  https://bugs.freedesktop.org/show_bug.cgi?id=72822
+* Fix build issue with wayland
+  https://bugs.freedesktop.org/show_bug.cgi?id=79478
+* vainfo: Add option '--display'
+
+Version 1.6.1 - 09.Sep.2015
+* Add support for VP9 decode and HEVC encode in VA trace module
+* Add VP9 profile to vainfo
+* Enhance VA trace to dump VP8 encode parameters
+
+Version 1.6.0 - 01.Jul.2015
+* Bump VA API version to 0.38
+* Add support for HEVC encode API
+* Add support for VP9 decode API
+* Add API (vaSetDriverName()) to allow the user to specify the loaded backend driver
+* Add VAConfigAttribEncSkipFrame and corresponding structures to support
+  sending skip frame parameters to the backend driver.
+* Add support for querying slice decoding mode supported by the backend driver
+* Fix quality issue in the JPEG encode demo
+
+Version 1.5.1 - DD.Mar.2015
+* API: correct the comment for num_token_partitions in struct  _VAEncPictureParameterBufferVP8
+* VA/x11: fix double Unlocks/SyncHandle to avoid segmentation fault
+
+Version 1.5.0 - 28.Dec.2014
+* API: add support for HEVC decoding
+* API: extend JPEG encoding data structures and add configuration attribute for JPEG encoding
+* Add a unit test for JPEG encoding (Sirisha Muppavarapu)
+* Add support for HEVC decoding and JPEG encoding in VA trace utility
+* Fix out of tree builds (Emil Velikov)
+* VA/X11: fix BadDrawable issue when calling vaTerminate() after the pixmaps have been destroyed (Lionel Landwerlin)
+
+Version 1.4.1 - 24.Oct.2014
+* Add support for DRM Render-Nodes (Andrey Larionov)
+
+Version 1.4.0 - 30.Sep.2014
+* API: add support for VP8 encoding
+* API: add H.264 MVC profiles for decoding and encoding
+* API: add buffer export interfaces for interop with 3rdparty APIs (EGL, OCL)
+* API: add suppor for encoder quality level
+* API: add attribute usage hint flag
+* Fix build on 64-bit versions of Android (Qiming Shi)
+* Assorted fixes to the VA fool and trace modules (Austin Yuan)
+
+Version 1.3.1 - 09.May.2014
+* API: fix VA_ENC_PACKED_HEADER_RAW_DATA value
+* API: add STE filter to the VPP pipeline
+* Update doxygen tags in libva
+* Fix doc/Makefile.am
+* A workaround for https://bugs.freedesktop.org/show_bug.cgi?id=76755
+
+Version 1.3.0 - 24.Mar.2014
+* API: add support for VP8 decoding
+* API: drop VAEntrypointMax enumeration
+* Enhancement for VA trace utility
+
+Version 1.2.1 - 27.Jun.2013
+* Fix https://bugs.freedesktop.org/show_bug.cgi?id=66221 
+* Add back VA_DRIVER_INIT_FUNC definition for testing
+
+Version 1.2.0 - 25.Jun.2013
+* API: new H.264 encoding API for Main and High profiles
+* API: add support for MPEG-2 encoding
+* API: add video processing interfaces
+* API: add vaQuerySurfaceAttributes() to query surface attributes supported by the underlying drivers.
+* API: new version of vaCreateSurfaces()
+* API: add new surface attributes to enable VA surface creation from external buffer
+* API: add new RT formats and fourcc codes
+* Refine VA trace utility
+* Refine H.264 encoding test cases {avcenc, h264enc}
+* A new test case for MPEG-2 encoding
+* A lot of bug fixes
+
+Version 1.1.1 - 19.Mar.2013
+* Support wayland 1.0 protocol (Rob Bradford)
+* Automake 1.13 fixups (Armin K)
+
+Version 1.1.0 - 04.Oct.2012
+* API: add Wayland support
+* API: add raw DRM support for headless pipelines
+* Fix generic VA/GLX implementation for newer cluttersink versions
+* Fix threading issues in VA objects reference code (+Krzysztof Kotlenga)
+* Fix build on Android Ice Cream Sandwich (+Haitao Huang, Daniel Charles)
+
+Version 1.0.16 - 02.Aug.2012
+* API: data structures for JPEG Baseline decoding
+* API: clarify the definition of slice_data_bit_offset
+* Add a simple test case for JPEG decoding
+
+Version 1.0.15 - 28.Oct.2011
+* API: make {Top,Bottom}FieldOrderCnt signed (Yi Wang)
+* Add auto-generated Debian packaging
+* Refine VA trace & VA fool utilities
+* Move i965 driver to a specific repository (vaapi/intel-driver)
+* Fix DSO link issue in tests
+* Fix fglrx driver name detection
+* Fix API vs. DSO vs. package versioning
+
+Version 1.0.14 - 28.Jul.2011
+* API: rename VA_DECODE_ERROR_TYPE to VADecodeErrorType
+* Fix memory leaks (Edgar Hucek)
+* Fix VA trace logs (Alexander Osin)
+* Fix vaTerminate() with some applications, e.g. GStreamer
+
+Version 1.0.13 - 30.May.2011
+* API: fix VA_ROTATION_270 definition
+* Add a simple H.264 encoder "avcenc" (Chang Zhou)
+* Fix VA tracer (Alexander Osin)
+* Fix vaBufferInfo() interface (Alexander Osin)
+
+Version 1.0.12 - 01.Apr.2011
+* API: add VARenderMode interface to select overlay or GPU rendering mode
+* API: add VARenderDevice interface to allow rendering to an external device
+* API: add VADisplayAttribOverlay{ColorKey,AutoPaintColorKey} interface
+* Fix build issues on Android 2.3
+
+Changes for older versions can be found in git log or previously
+released packages.
