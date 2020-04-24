@@ -761,6 +761,22 @@ typedef enum
      * attribute value \c VAConfigAttribValMaxFrameSize represent max frame size support   
      */
     VAConfigAttribMaxFrameSize           = 38,
+    /** \brief inter frame prediction directrion attribute. Read-only.
+     * this attribute conveys the prediction direction (backward or forword) for specific config
+     * the value could be  VA_PREDICTION_DIRECTION_XXXX. it can be combined with VAConfigAttribEncMaxRefFrames
+     * to describe reference list , and the prediction direction. if this attrib is not present,both direction
+     * should be supported, no restriction.
+     * for example: normal HEVC encoding , maximum reference frame number in reflist 0 and reflist 1 is deduced
+     * by  VAConfigAttribEncMaxRefFrames. so there are typical P frame, B frame,
+     * if VAConfigAttribPredictionDirection is also present. it will stipulate prediction direction in both
+     * reference list. if only one prediction direction present(such as PREVIOUS),all reference frame should be
+     *  previous frame (PoC < current).
+     */
+    VAConfigAttribPredictionDirection   = 39,
+    /** \brief combined submission of multiple frames from different streams, it is optimization for different HW
+     * implementation, multiple frames encode/decode can improve HW concurrency
+     */
+    VAConfigAttribMultipleFrame         = 40,
     /**@}*/
     VAConfigAttribTypeMax
 } VAConfigAttribType;
@@ -863,14 +879,13 @@ typedef struct _VAConfigAttrib {
 /** @name Attribute values for VAConfigAttribDecJPEG */
 /**@{*/
 typedef union _VAConfigAttribValDecJPEG {
-    struct{
+    struct {
     /** \brief Set to (1 << VA_ROTATION_xxx) for supported rotation angles. */
     uint32_t rotation : 4;
     /** \brief Reserved for future use. */
     uint32_t reserved : 28;
-    }bits;
+    } bits;
     uint32_t value;
-    uint32_t va_reserved[VA_PADDING_LOW];
 } VAConfigAttribValDecJPEG;
 /** @name Attribute values for VAConfigAttribDecProcessing */
 /**@{*/
@@ -990,6 +1005,19 @@ typedef union _VAConfigAttribValEncJPEG {
 #define VA_ENC_QUANTIZATION_TRELLIS_SUPPORTED           0x00000001
 /**@}*/
 
+/** @name Attribute values for VAConfigAttribPredictionDirection */
+/**@{*/
+/** \brief Driver support forward reference frame (inter frame for vpx, P frame for H26x MPEG)
+ * can work with the VAConfigAttribEncMaxRefFrames. for example: low delay B frame of HEVC.
+ * these value can be OR'd together. typical value should be VA_PREDICTION_DIRECTION_PREVIOUS
+ * or VA_PREDICTION_DIRECTION_PREVIOUS | VA_PREDICTION_DIRECTION_FUTURE, theoretically, there
+ * are no stream only include future reference frame.
+ */
+#define VA_PREDICTION_DIRECTION_PREVIOUS                0x00000001
+/** \brief Driver support backward prediction frame/slice */
+#define VA_PREDICTION_DIRECTION_FUTURE                  0x00000002
+/**@}*/
+
 /** @name Attribute values for VAConfigAttribEncIntraRefresh */
 /**@{*/
 /** \brief Driver does not support intra refresh */
@@ -1085,6 +1113,21 @@ typedef union _VAConfigAttribValEncRateControlExt {
     } bits;
     uint32_t value;
 } VAConfigAttribValEncRateControlExt;
+
+/** \brief Attribute value for VAConfigAttribMultipleFrame*/
+typedef union _VAConfigAttribValMultipleFrame {
+    struct {
+        /** \brief max num of concurrent frames from different stream */
+        uint32_t max_num_concurrent_frames      : 8;
+        /** \brief indicate whether all stream must support same quality level
+         *  if mixed_quality_level == 0, same quality level setting for multple streams is required
+         *  if mixed_quality_level == 1, different stream can have different quality level*/
+        uint32_t mixed_quality_level            : 1;
+        /** \brief reserved bit for future, must be zero */
+        uint32_t reserved                       : 23;
+    } bits;
+    uint32_t value;
+}VAConfigAttribValMultipleFrame;
 
 /** @name Attribute values for VAConfigAttribProcessingRate. */
 /**@{*/

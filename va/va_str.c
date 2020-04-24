@@ -124,6 +124,8 @@ const char *vaConfigAttribTypeStr(VAConfigAttribType configAttribType)
     TOSTR(VAConfigAttribQPBlockSize);
     TOSTR(VAConfigAttribStats);
     TOSTR(VAConfigAttribMaxFrameSize);
+    TOSTR(VAConfigAttribPredictionDirection);
+    TOSTR(VAConfigAttribMultipleFrame);
     case VAConfigAttribTypeMax: break;
     }
     return "<unknown config attribute type>";
