@@ -119,11 +119,12 @@ extern "C" {
  * 	- \ref api_enc_mpeg2
  * 	- \ref api_enc_vp8
  * 	- \ref api_enc_vp9
- * - Decoder (HEVC, JPEG, VP8, VP9)
+ * - Decoder (HEVC, JPEG, VP8, VP9, AV1)
  *      - \ref api_dec_hevc
  *      - \ref api_dec_jpeg
  *      - \ref api_dec_vp8
  *      - \ref api_dec_vp9
+ *      - \ref api_dec_av1
  * - \ref api_vpp
  * - FEI (H264, HEVC)
  * 	- \ref api_fei
@@ -392,7 +393,9 @@ typedef enum
     VAProfileHEVCMain444_12             = 28,
     VAProfileHEVCSccMain                = 29,
     VAProfileHEVCSccMain10              = 30,
-    VAProfileHEVCSccMain444             = 31
+    VAProfileHEVCSccMain444             = 31,
+    VAProfileAV1Profile0                = 32,
+    VAProfileAV1Profile1                = 33
 } VAProfile;
 
 /**
@@ -4005,6 +4008,14 @@ VAStatus vaQuerySurfaceError(
  * 10-bit Pixel BGR formats.
  */
 #define VA_FOURCC_A2B10G10R10   0x30334241 /* VA_FOURCC('A','B','3','0') */
+/**
+ * 10-bit Pixel RGB formats without alpha.
+ */
+#define VA_FOURCC_X2R10G10B10   0x30335258 /* VA_FOURCC('X','R','3','0') */
+/**
+ * 10-bit Pixel BGR formats without alpha.
+ */
+#define VA_FOURCC_X2B10G10R10   0x30334258 /* VA_FOURCC('X','B','3','0') */
 
 /** Y8: 8-bit greyscale.
  *
@@ -4616,6 +4627,7 @@ typedef struct _VAPictureHEVC
 #include <va/va_dec_jpeg.h>
 #include <va/va_dec_vp8.h>
 #include <va/va_dec_vp9.h>
+#include <va/va_dec_av1.h>
 #include <va/va_enc_hevc.h>
 #include <va/va_fei_hevc.h>
 #include <va/va_enc_h264.h>

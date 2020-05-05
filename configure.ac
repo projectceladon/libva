@@ -27,7 +27,7 @@
 # - reset micro version to zero when minor version is incremented
 # - reset minor version to zero when major version is incremented
 m4_define([va_api_major_version], [1])
-m4_define([va_api_minor_version], [6])
+m4_define([va_api_minor_version], [7])
 m4_define([va_api_micro_version], [0])
 
 m4_define([va_api_version],
@@ -42,7 +42,7 @@ m4_define([va_api_version],
 # - reset micro version to zero when VA-API major or minor version is changed
 m4_define([libva_major_version], [m4_eval(va_api_major_version + 1)])
 m4_define([libva_minor_version], [m4_eval(va_api_minor_version)])
-m4_define([libva_micro_version], [0])
+m4_define([libva_micro_version], [1])
 m4_define([libva_pre_version],   [0])
 
 m4_define([libva_version],
@@ -259,7 +259,7 @@ if test "$USE_X11:$enable_glx" = "no:yes"; then
    AC_MSG_ERROR([VA/GLX explicitly enabled, but VA/X11 isn't built])
 fi
 
-if test "$USE_X11" == "yes" -a "$enable_glx" != "no"; then
+if test "$USE_X11" = "yes" -a "$enable_glx" != "no"; then
     PKG_CHECK_MODULES([GLX], [gl x11], [USE_GLX="yes"], [:])
     saved_CPPFLAGS="$CPPFLAGS"
     saved_LIBS="$LIBS"
