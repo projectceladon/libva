@@ -25,8 +25,8 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-LIBVA_DRIVERS_PATH_32 := /vendor/lib/dri
-LIBVA_DRIVERS_PATH_64 := /vendor/lib64/dri
+LIBVA_DRIVERS_PATH_32 := /vendor/lib/:/system/lib
+LIBVA_DRIVERS_PATH_64 := /vendor/lib64/:/system/lib64
 
 include $(CLEAR_VARS)
 
@@ -56,13 +56,47 @@ LOCAL_CFLAGS := \
 	-DLOG_TAG=\"libva\"
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/..
+LOCAL_COPY_HEADERS := \
+     va.h \
+     va_version.h \
+     va_dec_hevc.h \
+     va_dec_jpeg.h \
+     va_dec_vp8.h \
+     va_dec_vp9.h \
+     va_enc_hevc.h \
+     va_enc_h264.h \
+     va_enc_jpeg.h \
+     va_enc_vp8.h \
+     va_backend.h \
+     va_drmcommon.h \
+     va_vpp.h \
+     va_backend_vpp.h \
+     va_enc_mpeg2.h \
+     sysdeps.h \
+     va_compat.h \
+     va_egl.h \
+     va_enc_vp9.h \
+     va_fei.h \
+     va_fei_h264.h \
+     va_fei_hevc.h \
+     va_fool.h \
+     va_internal.h \
+     va_str.h \
+     va_tpi.h \
+     va_trace.h \
+     va_dec_av1.h \
+
+LOCAL_COPY_HEADERS_TO := libva/va
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libva
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_PROPRIETARY_MODULE := true
-
+LOCAL_CFLAGS += -Wno-error
 LOCAL_SHARED_LIBRARIES := libdl libdrm libcutils liblog
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 27; echo $$?), 0)
+LOCAL_HEADER_LIBRARIES += libutils_headers
+endif
 
 intermediates := $(call local-generated-sources-dir)
 
@@ -95,10 +129,20 @@ LOCAL_CFLAGS += \
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/drm
 
+LOCAL_COPY_HEADERS_TO := libva/va
+
+LOCAL_COPY_HEADERS := va_android.h		
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libva-android
 LOCAL_PROPRIETARY_MODULE := true
 
-LOCAL_SHARED_LIBRARIES := libva libdrm liblog
+LOCAL_SHARED_LIBRARIES := libva libdrm libnativewindow liblog
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 27; echo $$?), 0)
+LOCAL_STATIC_LIBRARIES += libarect
+LOCAL_HEADER_LIBRARIES += libnativebase_headers libutils_headers
+endif
+
 
 include $(BUILD_SHARED_LIBRARY)
