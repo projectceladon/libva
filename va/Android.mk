@@ -104,12 +104,19 @@ LOCAL_EXPORT_C_INCLUDE_DIRS := \
 	$(intermediates) \
 	$(LOCAL_C_INCLUDES)
 
-GEN := $(intermediates)/va/va_version.h
-$(GEN): SCRIPT := $(LOCAL_PATH)/../build/gen_version.sh
-$(GEN): PRIVATE_CUSTOM_TOOL = sh $(SCRIPT) $(<D)/.. $< > $@
-$(GEN): $(intermediates)/va/%.h : $(LOCAL_PATH)/%.h.in $(LOCAL_PATH)/../configure.ac
-	$(transform-generated-source)
-LOCAL_GENERATED_SOURCES += $(GEN) 
+#GEN := $(intermediates)/va/va_version.h
+#$(GEN): SCRIPT := $(LOCAL_PATH)/../build/gen_version.sh
+#$(GEN): PRIVATE_CUSTOM_TOOL = sh $(SCRIPT) $(<D)/.. $< > $@
+#$(GEN): $(intermediates)/va/%.h : $(LOCAL_PATH)/%.h.in $(LOCAL_PATH)/../configure.ac
+#	$(transform-generated-source)
+#LOCAL_GENERATED_SOURCES += $(GEN)
+
+DST := $(LOCAL_PATH)/va_version.h
+SCRIPT := $(LOCAL_PATH)/../build/gen_version.sh
+PARAM1 := $(LOCAL_PATH)/../
+PARAM2 := $(LOCAL_PATH)/va_version.h.in
+$(shell ($(SCRIPT) $(PARAM1) $(PARAM2) > $(DST)))
+
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -131,7 +138,7 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_COPY_HEADERS_TO := libva/va
 
-LOCAL_COPY_HEADERS := va_android.h		
+LOCAL_COPY_HEADERS := va_android.h
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libva-android
