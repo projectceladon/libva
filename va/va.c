@@ -473,6 +473,7 @@ static VAStatus va_openDriver(VADisplay dpy, char *driver_name)
                 { VA_MAJOR_VERSION, 6 },
                 { VA_MAJOR_VERSION, 5 },
                 { VA_MAJOR_VERSION, 4 },
+                { VA_MAJOR_VERSION, 3 },
                 { VA_MAJOR_VERSION, 2 },
                 { VA_MAJOR_VERSION, 1 },
                 { VA_MAJOR_VERSION, 0 },

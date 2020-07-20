@@ -22,8 +22,6 @@ config.log
 config.status
 config.sub
 configure
-debian.upstream/changelog
-debian.upstream/control
 depcomp
 install-sh
 libtool
@@ -34,3 +32,5 @@ stamp-h1
 #/va/va_version.h
 /va/wayland/wayland-drm-client-protocol-export.c
 /va/wayland/wayland-drm-client-protocol.*
+/doc/Doxyfile
+/doc/html-out

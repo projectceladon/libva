@@ -118,7 +118,7 @@ int
 VA_DRM_IsRenderNodeFd(int fd)
 {
     struct stat st;
-    char *name;
+    const char *name;
 
     /* Check by device node */
     if (fstat(fd, &st) == 0)
@@ -126,11 +126,8 @@ VA_DRM_IsRenderNodeFd(int fd)
 
     /* Check by device name */
     name = drmGetDeviceNameFromFd(fd);
-    if (name){
-        int ret = strncmp(name, "/dev/dri/renderD", 16) == 0;
-		drmFree(name);
-		return ret;
-	}
+    if (name)
+        return strncmp(name, "/dev/dri/renderD", 16) == 0;
 
     /* Unrecoverable error */
     return -1;
