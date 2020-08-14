@@ -24,6 +24,8 @@
 #ifndef _VA_ANDROID_H_
 #define _VA_ANDROID_H_
 
+#ifdef ANDROID
+
 #include <va/va.h>
 
 /** \brief Android Gralloc buffer memory type. */
@@ -44,6 +46,9 @@ VADisplay vaGetDisplay (
 
 #ifdef __cplusplus
 }
+
+#endif
+
 #endif
 
 #endif /* _VA_ANDROID_H_ */
