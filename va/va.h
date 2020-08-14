@@ -395,7 +395,8 @@ typedef enum
     VAProfileHEVCSccMain10              = 30,
     VAProfileHEVCSccMain444             = 31,
     VAProfileAV1Profile0                = 32,
-    VAProfileAV1Profile1                = 33
+    VAProfileAV1Profile1                = 33,
+    VAProfileHEVCSccMain444_10          = 34
 } VAProfile;
 
 /**
@@ -956,12 +957,16 @@ typedef union _VAConfigAttribValDecJPEG {
 #define VA_ENC_SLICE_STRUCTURE_POWER_OF_TWO_ROWS        0x00000001
 /** \brief Driver supports an arbitrary number of macroblocks per slice. */
 #define VA_ENC_SLICE_STRUCTURE_ARBITRARY_MACROBLOCKS    0x00000002
-/** \brief Dirver support 1 rows  per slice */
+/** \brief Driver support 1 row per slice */
 #define VA_ENC_SLICE_STRUCTURE_EQUAL_ROWS               0x00000004
-/** \brief Dirver support max encoded slice size per slice */
+/** \brief Driver support max encoded slice size per slice */
 #define VA_ENC_SLICE_STRUCTURE_MAX_SLICE_SIZE           0x00000008
 /** \brief Driver supports an arbitrary number of rows per slice. */
 #define VA_ENC_SLICE_STRUCTURE_ARBITRARY_ROWS           0x00000010
+/** \brief Driver supports any number of rows per slice but they must be the same
+*       for all slices except for the last one, which must be equal or smaller
+*       to the previous slices. */
+#define VA_ENC_SLICE_STRUCTURE_EQUAL_MULTI_ROWS         0x00000020
 /**@}*/
 
 /** \brief Attribute value for VAConfigAttribMaxFrameSize */
@@ -1019,6 +1024,8 @@ typedef union _VAConfigAttribValEncJPEG {
 #define VA_PREDICTION_DIRECTION_PREVIOUS                0x00000001
 /** \brief Driver support backward prediction frame/slice */
 #define VA_PREDICTION_DIRECTION_FUTURE                  0x00000002
+/** \brief Dirver require both reference list must be not empty for inter frame */
+#define VA_PREDICTION_DIRECTION_BI_NOT_EMPTY            0x00000004
 /**@}*/
 
 /** @name Attribute values for VAConfigAttribEncIntraRefresh */
@@ -3981,6 +3988,12 @@ VAStatus vaQuerySurfaceError(
  * The first plane contains Y, the second plane contains U and V in pairs of samples.
  */
 #define VA_FOURCC_P010          0x30313050
+/** P012: two-plane 12-bit YUV 4:2:0.
+ *
+ * Each sample is a two-byte little-endian value with the bottom four bits ignored.
+ * The first plane contains Y, the second plane contains U and V in pairs of samples.
+ */
+#define VA_FOURCC_P012          0x32313050
 /** P016: two-plane 16-bit YUV 4:2:0.
  *
  * Each sample is a two-byte little-endian value.  The first plane contains Y, the second

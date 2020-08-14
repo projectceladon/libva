@@ -52,7 +52,7 @@
 #define DRIVER_EXTENSION	"_drv_video.so"
 
 #define ASSERT		assert
-#define CHECK_VTABLE(s, ctx, func) if (!va_checkVtable(dpy, ctx->vtable->va##func, #func)) s = VA_STATUS_ERROR_UNKNOWN;
+#define CHECK_VTABLE(s, ctx, func) if (!va_checkVtable(dpy, ctx->vtable->va##func, #func)) s = VA_STATUS_ERROR_UNIMPLEMENTED;
 #define CHECK_MAXIMUM(s, ctx, var) if (!va_checkMaximum(dpy, ctx->max_##var, #var)) s = VA_STATUS_ERROR_UNKNOWN;
 #define CHECK_STRING(s, ctx, var) if (!va_checkString(dpy, ctx->str_##var, #var)) s = VA_STATUS_ERROR_UNKNOWN;
 
@@ -465,19 +465,16 @@ static VAStatus va_openDriver(VADisplay dpy, char *driver_name)
             char init_func_s[256];
             int i;
 
-            static const struct {
+            struct {
                 int major;
                 int minor;
-            } compatible_versions[] = {
-                { VA_MAJOR_VERSION, VA_MINOR_VERSION },
-                { VA_MAJOR_VERSION, 6 },
-                { VA_MAJOR_VERSION, 5 },
-                { VA_MAJOR_VERSION, 4 },
-                { VA_MAJOR_VERSION, 2 },
-                { VA_MAJOR_VERSION, 1 },
-                { VA_MAJOR_VERSION, 0 },
-                { -1, -1}
-            };
+            } compatible_versions[VA_MINOR_VERSION + 2];
+            for (i = 0; i <= VA_MINOR_VERSION; i ++) {
+                compatible_versions[i].major = VA_MAJOR_VERSION;
+                compatible_versions[i].minor = VA_MINOR_VERSION - i;
+            }
+            compatible_versions[i].major = -1;
+            compatible_versions[i].minor = -1;
 
             for (i = 0; compatible_versions[i].major >= 0; i++) {
                 if (va_getDriverInitName(init_func_s, sizeof(init_func_s),
@@ -547,7 +544,6 @@ static VAStatus va_openDriver(VADisplay dpy, char *driver_name)
                     CHECK_VTABLE(vaStatus, ctx, EndPicture);
                     CHECK_VTABLE(vaStatus, ctx, SyncSurface);
                     CHECK_VTABLE(vaStatus, ctx, QuerySurfaceStatus);
-                    CHECK_VTABLE(vaStatus, ctx, PutSurface);
                     CHECK_VTABLE(vaStatus, ctx, QueryImageFormats);
                     CHECK_VTABLE(vaStatus, ctx, CreateImage);
                     CHECK_VTABLE(vaStatus, ctx, DeriveImage);
@@ -1616,12 +1612,11 @@ VAStatus vaEndPicture (
   ctx = CTX(dpy);
 
   VA_FOOL_FUNC(va_FoolCheckContinuity, dpy);
-
+  VA_TRACE_ALL(va_TraceEndPicture, dpy, context, 0);
   va_status = ctx->vtable->vaEndPicture( ctx, context );
-
-  /* dump surface content */
-  VA_TRACE_ALL(va_TraceEndPicture, dpy, context, 1);
   VA_TRACE_RET(dpy, va_status);
+  /* dump surface content */
+  VA_TRACE_ALL(va_TraceEndPictureExt, dpy, context, 1);
 
   return va_status;
 }
