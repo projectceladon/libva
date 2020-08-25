@@ -24,7 +24,6 @@
 #ifndef _VA_ANDROID_H_
 #define _VA_ANDROID_H_
 
-#ifdef ANDROID
 
 #include <va/va.h>
 
@@ -46,8 +45,6 @@ VADisplay vaGetDisplay (
 
 #ifdef __cplusplus
 }
-
-#endif
 
 #endif
 
