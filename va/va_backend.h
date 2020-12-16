@@ -485,8 +485,20 @@ struct VADriverVTable
             void               *descriptor      /* out */
         );
 
+        VAStatus (*vaSyncSurface2) (
+            VADriverContextP ctx,
+            VASurfaceID surface,
+            uint64_t timeout_ns
+        );
+
+        VAStatus (*vaSyncBuffer) (
+            VADriverContextP ctx,
+            VABufferID buf_id,
+            uint64_t timeout_ns
+        );
+
         /** \brief Reserved bytes for future use, must be zero */
-        unsigned long reserved[57];
+        unsigned long reserved[55];
 };
 
 struct VADriverContext

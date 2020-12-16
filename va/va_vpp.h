@@ -969,6 +969,9 @@ typedef struct _VAProcPipelineParameterBuffer {
      *   \c VA_SRC_SMPTE_240.
      * - Scaling: \c VA_FILTER_SCALING_DEFAULT, \c VA_FILTER_SCALING_FAST,
      *   \c VA_FILTER_SCALING_HQ, \c VA_FILTER_SCALING_NL_ANAMORPHIC.
+     * - Interpolation Method: \c VA_FILTER_INTERPOLATION_DEFAULT,
+     *   \c VA_FILTER_INTERPOLATION_NEAREST_NEIGHBOR,
+     *   \c VA_FILTER_INTERPOLATION_BILINEAR, \c VA_FILTER_INTERPOLATION_ADVANCED.
      */
     uint32_t        filter_flags;
     /**
@@ -986,11 +989,11 @@ typedef struct _VAProcPipelineParameterBuffer {
     VABufferID         *filters;
     /** \brief Actual number of filters. */
     uint32_t           num_filters;
-    /** \brief Array of forward reference frames. */
+    /** \brief Array of forward reference frames (past frames). */
     VASurfaceID        *forward_references;
     /** \brief Number of forward reference frames that were supplied. */
     uint32_t           num_forward_references;
-    /** \brief Array of backward reference frames. */
+    /** \brief Array of backward reference frames (future frames). */
     VASurfaceID        *backward_references;
     /** \brief Number of backward reference frames that were supplied. */
     uint32_t           num_backward_references;

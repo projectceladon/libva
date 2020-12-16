@@ -1639,6 +1639,28 @@ VAStatus vaSyncSurface (
   return va_status;
 }
 
+VAStatus vaSyncSurface2 (
+    VADisplay dpy,
+    VASurfaceID surface,
+    uint64_t timeout_ns
+)
+{
+  VAStatus va_status;
+  VADriverContextP ctx;
+
+  CHECK_DISPLAY(dpy);
+  ctx = CTX(dpy);
+
+  if (ctx->vtable->vaSyncSurface2)
+      va_status = ctx->vtable->vaSyncSurface2( ctx, surface, timeout_ns );
+  else
+      va_status = VA_STATUS_ERROR_UNIMPLEMENTED;
+  VA_TRACE_LOG(va_TraceSyncSurface2, dpy, surface, timeout_ns);
+  VA_TRACE_RET(dpy, va_status);
+
+  return va_status;
+}
+
 VAStatus vaQuerySurfaceStatus (
     VADisplay dpy,
     VASurfaceID render_target,
@@ -1674,6 +1696,29 @@ VAStatus vaQuerySurfaceError (
 
   VA_TRACE_LOG(va_TraceQuerySurfaceError, dpy, surface, error_status, error_info);
   VA_TRACE_RET(dpy, va_status); 
+
+  return va_status;
+}
+
+VAStatus vaSyncBuffer (
+    VADisplay dpy,
+    VABufferID buf_id,
+    uint64_t timeout_ns
+)
+{
+  VAStatus va_status;
+  VADriverContextP ctx;
+
+  CHECK_DISPLAY(dpy);
+  ctx = CTX(dpy);
+
+  VA_TRACE_LOG(va_TraceSyncBuffer, dpy, buf_id, timeout_ns);
+
+  if (ctx->vtable->vaSyncBuffer)
+      va_status = ctx->vtable->vaSyncBuffer( ctx, buf_id, timeout_ns );
+  else
+      va_status = VA_STATUS_ERROR_UNIMPLEMENTED;
+  VA_TRACE_RET(dpy, va_status);
 
   return va_status;
 }

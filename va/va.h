@@ -213,6 +213,8 @@ typedef int VAStatus;	/** Return status type from functions */
 #define VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE 0x00000024
 /** \brief Indicate allocated buffer size is not enough for input or output. */
 #define VA_STATUS_ERROR_NOT_ENOUGH_BUFFER       0x00000025
+/** \brief Indicate an operation isn't completed because time-out interval elapsed. */
+#define VA_STATUS_ERROR_TIMEDOUT                0x00000026
 #define VA_STATUS_ERROR_UNKNOWN			0xFFFFFFFF
 
 /** 
@@ -255,6 +257,13 @@ typedef int VAStatus;	/** Return status type from functions */
 #define VA_FILTER_SCALING_HQ            0x00000200
 #define VA_FILTER_SCALING_NL_ANAMORPHIC 0x00000300
 #define VA_FILTER_SCALING_MASK          0x00000f00
+
+/** Interpolation method for scaling */
+#define VA_FILTER_INTERPOLATION_DEFAULT                    0x00000000
+#define VA_FILTER_INTERPOLATION_NEAREST_NEIGHBOR           0x00001000
+#define VA_FILTER_INTERPOLATION_BILINEAR                   0x00002000
+#define VA_FILTER_INTERPOLATION_ADVANCED                   0x00003000
+#define VA_FILTER_INTERPOLATION_MASK                       0x0000f000
 
 /** Padding size in 4-bytes */
 #define VA_PADDING_LOW          4
@@ -781,6 +790,10 @@ typedef enum
      * implementation, multiple frames encode/decode can improve HW concurrency
      */
     VAConfigAttribMultipleFrame         = 40,
+    /** \brief priority setting for the context. Read-Write
+     *  attribute value is \c VAConfigAttribValContextPriority
+     */
+    VAConfigAttribContextPriority       = 41,
     /**@}*/
     VAConfigAttribTypeMax
 } VAConfigAttribType;
@@ -1138,6 +1151,18 @@ typedef union _VAConfigAttribValMultipleFrame {
     } bits;
     uint32_t value;
 }VAConfigAttribValMultipleFrame;
+
+/** brief Attribute value VAConfigAttribValContestPriority */
+typedef union _VAConfigAttribValContextPriority{
+    struct{
+        /** \brief the priority , for the Query operation (read) it represents highest priority
+         * for the set operation (write), value should be [0~highest priority] , 0 is lowest priority*/
+        uint32_t priority     :16;
+        /** \brief reserved bits for future, must be zero*/
+        uint32_t reserved     :16;
+    }bits;
+    uint32_t value;
+}VAConfigAttribValContextPriority;
 
 /** @name Attribute values for VAConfigAttribProcessingRate. */
 /**@{*/
@@ -3724,6 +3749,35 @@ VAStatus vaSyncSurface (
     VASurfaceID render_target
 );
 
+/** \brief Indicates an infinite timeout. */
+#define VA_TIMEOUT_INFINITE 0xFFFFFFFFFFFFFFFF
+
+/**
+ * \brief Synchronizes pending operations associated with the supplied surface.
+ *
+ * This function blocks during specified timeout (in nanoseconds) until
+ * all pending operations on the render target have been completed.
+ * If timeout is zero, the function returns immediately.
+ *
+ * Possible errors:
+ * - \ref VA_STATUS_ERROR_UNIMPLEMENTED: the VA driver implementation
+ *   does not support this interface
+ * - \ref VA_STATUS_ERROR_INVALID_DISPLAY: an invalid display was supplied
+ * - \ref VA_STATUS_ERROR_INVALID_SURFACE: an invalid surface was supplied
+ * - \ref VA_STATUS_ERROR_TIMEDOUT: synchronization is still in progress,
+ *   client should call the function again to complete synchronization
+ *
+ * @param[in] dpy         the VA display
+ * @param[in] surface     the surface for which synchronization is performed
+ * @param[in] timeout_ns  the timeout in nanoseconds
+ *
+ */
+VAStatus vaSyncSurface2 (
+    VADisplay dpy,
+    VASurfaceID surface,
+    uint64_t timeout_ns
+);
+
 typedef enum
 {
     VASurfaceRendering	= 1, /* Rendering in progress */ 
@@ -3778,6 +3832,46 @@ VAStatus vaQuerySurfaceError(
     VAStatus error_status,
     void **error_info
 );
+
+/**
+ * \brief Synchronizes pending operations associated with the supplied buffer.
+ *
+ * This function blocks during specified timeout (in nanoseconds) until
+ * all pending operations on the supplied buffer have been completed.
+ * If timeout is zero, the function returns immediately.
+ *
+ * Possible errors:
+ * - \ref VA_STATUS_ERROR_UNIMPLEMENTED: the VA driver implementation
+ *   does not support this interface
+ * - \ref VA_STATUS_ERROR_INVALID_DISPLAY: an invalid display was supplied
+ * - \ref VA_STATUS_ERROR_INVALID_BUFFER: an invalid buffer was supplied
+ * - \ref VA_STATUS_ERROR_TIMEDOUT: synchronization is still in progress,
+ *   client should call the function again to complete synchronization
+ *
+ * @param[in] dpy         the VA display
+ * @param[in] buf_id      the buffer for which synchronization is performed
+ * @param[in] timeout_ns  the timeout in nanoseconds
+ *
+ */
+VAStatus vaSyncBuffer(
+    VADisplay dpy,
+    VABufferID buf_id,
+    uint64_t timeout_ns
+);
+
+/**
+ * Notes about synchronization interfaces:
+ * vaSyncSurface:
+ * 1. Allows to synchronize output surface (i.e. from decoding or VP)
+ * 2. Allows to synchronize all bitstreams being encoded from the given input surface (1->N pipelines).
+ *
+ * vaSyncSurface2:
+ * 1. The same as vaSyncSurface but allows to specify a timeout
+ *
+ * vaSyncBuffer:
+ * 1. Allows to synchronize output buffer (e.g. bitstream from encoding).
+ *    Comparing to vaSyncSurface this function synchronizes given bitstream only.
+ */
 
 /**
  * Images and Subpictures
@@ -3958,6 +4052,12 @@ VAStatus vaQuerySurfaceError(
  * with the bottom six bits ignored.  The samples are in the order Y, U, Y, V.
  */
 #define VA_FOURCC_Y210          0x30313259
+/** Y212: packed 12-bit YUV 4:2:2.
+ *
+ * Eight bytes represent a pair of pixels.  Each sample is a two-byte little-endian value.
+ * The samples are in the order Y, U, Y, V.
+ */
+#define VA_FOURCC_Y212          0x32313259
 /** Y216: packed 16-bit YUV 4:2:2.
  *
  * Eight bytes represent a pair of pixels.  Each sample is a two-byte little-endian value.
@@ -3970,6 +4070,12 @@ VAStatus vaQuerySurfaceError(
  * A, V, Y, U are found in bits 31:30, 29:20, 19:10, 9:0 respectively.
  */
 #define VA_FOURCC_Y410          0x30313459
+/** Y412 packed 12-bit YUVA 4:4:4.
+ *
+ * Each pixel is a set of four samples, each of which is a two-byte little-endian value.
+ * The samples are in the order A, V, Y, U.
+ */
+#define VA_FOURCC_Y412          0x32313459
 /** Y416: packed 16-bit YUVA 4:4:4.
  *
  * Each pixel is a set of four samples, each of which is a two-byte little-endian value.
