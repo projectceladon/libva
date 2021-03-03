@@ -25,8 +25,9 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-LIBVA_DRIVERS_PATH_32 := /vendor/lib/dri
-LIBVA_DRIVERS_PATH_64 := /vendor/lib64/dri
+LIBVA_DRIVERS_PATH_32 := /vendor/lib
+LIBVA_DRIVERS_PATH_64 := /vendor/lib64
+LIBVA_CONFIG_DIR := /etc
 
 include $(CLEAR_VARS)
 
@@ -42,7 +43,10 @@ LOCAL_SRC_FILES := \
 	va.c \
 	va_trace.c \
 	va_fool.c  \
-	va_str.c
+	va_str.c \
+    drm/va_drm.c \
+    drm/va_drm_auth.c \
+    drm/va_drm_utils.c
 
 LOCAL_CFLAGS_32 += \
 	-DVA_DRIVERS_PATH="\"$(LIBVA_DRIVERS_PATH_32)\"" \
@@ -51,11 +55,46 @@ LOCAL_CFLAGS_64 += \
 	-DVA_DRIVERS_PATH="\"$(LIBVA_DRIVERS_PATH_64)\"" \
 
 LOCAL_CFLAGS := \
-	$(IGNORED_WARNNING) \
-	$(if $(filter user,$(TARGET_BUILD_VARIANT)),,-DENABLE_VA_MESSAGING) \
-	-DLOG_TAG=\"libva\"
+    $(IGNORED_WARNNING) \
+    $(if $(filter user,$(TARGET_BUILD_VARIANT)),,-DENABLE_VA_MESSAGING) \
+    -DLOG_TAG=\"libva\" \
+    -DSYSCONFDIR="\"$(LIBVA_CONFIG_DIR)\""
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/..
+LOCAL_COPY_HEADERS := \
+     va.h \
+     va_version.h \
+     va_dec_hevc.h \
+     va_dec_jpeg.h \
+     va_dec_vp8.h \
+     va_dec_vp9.h \
+     va_enc_hevc.h \
+     va_enc_h264.h \
+     va_enc_jpeg.h \
+     va_enc_vp8.h \
+     va_backend.h \
+     va_drmcommon.h \
+     va_vpp.h \
+     va_backend_prot.h \
+     va_backend_vpp.h \
+     va_enc_mpeg2.h \
+     sysdeps.h \
+     va_compat.h \
+     va_egl.h \
+     va_prot.h \
+     va_enc_vp9.h \
+     va_fei.h \
+     va_fei_h264.h \
+     va_fei_hevc.h \
+     va_fool.h \
+     va_internal.h \
+     va_str.h \
+     va_tpi.h \
+     va_trace.h \
+     va_dec_av1.h \
+     drm/va_drm.h
+
+LOCAL_COPY_HEADERS_TO := libva/va
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libva
@@ -63,19 +102,15 @@ LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_PROPRIETARY_MODULE := true
 
 LOCAL_SHARED_LIBRARIES := libdl libdrm libcutils liblog
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 27; echo $$?), 0)
+LOCAL_HEADER_LIBRARIES += libutils_headers
+endif
 
 intermediates := $(call local-generated-sources-dir)
 
 LOCAL_EXPORT_C_INCLUDE_DIRS := \
 	$(intermediates) \
 	$(LOCAL_C_INCLUDES)
-
-GEN := $(intermediates)/va/va_version.h
-$(GEN): SCRIPT := $(LOCAL_PATH)/../build/gen_version.sh
-$(GEN): PRIVATE_CUSTOM_TOOL = sh $(SCRIPT) $(<D)/.. $< > $@
-$(GEN): $(intermediates)/va/%.h : $(LOCAL_PATH)/%.h.in $(LOCAL_PATH)/../configure.ac
-	$(transform-generated-source)
-LOCAL_GENERATED_SOURCES += $(GEN) 
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -95,10 +130,19 @@ LOCAL_CFLAGS += \
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)/drm
 
+LOCAL_COPY_HEADERS_TO := libva/va
+
+LOCAL_COPY_HEADERS := va_android.h
+
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libva-android
 LOCAL_PROPRIETARY_MODULE := true
 
 LOCAL_SHARED_LIBRARIES := libva libdrm liblog
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 27; echo $$?), 0)
+LOCAL_STATIC_LIBRARIES += libarect
+LOCAL_HEADER_LIBRARIES += libnativebase_headers libutils_headers
+endif
 
 include $(BUILD_SHARED_LIBRARY)
