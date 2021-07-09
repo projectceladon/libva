@@ -28,6 +28,7 @@ LOCAL_PATH:= $(call my-dir)
 LIBVA_DRIVERS_PATH_32 := /vendor/lib/:/system/lib
 LIBVA_DRIVERS_PATH_64 := /vendor/lib64/:/system/lib64
 
+
 include $(CLEAR_VARS)
 
 #LIBVA_MINOR_VERSION := 31
@@ -54,6 +55,7 @@ LOCAL_CFLAGS := \
 	$(IGNORED_WARNNING) \
 	$(if $(filter user,$(TARGET_BUILD_VARIANT)),,-DENABLE_VA_MESSAGING) \
 	-DLOG_TAG=\"libva\"
+        -DSYSCONFDIR='"$(sysconfdir)"'
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/..
 LOCAL_COPY_HEADERS := \
