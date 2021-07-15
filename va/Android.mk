@@ -101,6 +101,7 @@ LOCAL_COPY_HEADERS := \
 	va_enc_jpeg.h \
 	va_enc_vp8.h \
 	va_backend.h \
+	va_backend_prot.h \
 	va_drmcommon.h \
 	va_vpp.h \
 	va_backend_vpp.h \
@@ -118,6 +119,7 @@ LOCAL_COPY_HEADERS := \
 	va_tpi.h \
 	va_trace.h \
 	va_dec_av1.h \
+	va_prot.h
 
 LOCAL_COPY_HEADERS_TO := libva/va
 
