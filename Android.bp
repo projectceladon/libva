@@ -1,0 +1,98 @@
+cc_library_headers {
+    name: "libva_headers",
+
+    export_include_dirs: [
+        ".",
+    ],
+
+    vendor: true,
+
+    owner: "intel",
+}
+
+cc_library_shared {
+    name: "libva_bp",
+
+    header_libs: [
+        "libva_headers",
+    ],
+
+    local_include_dirs: [
+        "va",
+        "va/drm",
+    ],
+
+    srcs: [
+        "va/va.c",
+        "va/va_trace.c",
+        "va/va_fool.c",
+        "va/va_str.c",
+    ],
+
+    cflags: [
+        "-Wno-sign-compare",
+        "-Wno-unused-parameter",
+        "-Wno-missing-field-initializers",
+        "-DLIBVA_DRIVERS_PATH_32=/vendor/lib",
+        "-DLIBVA_DRIVERS_PATH_64=/vendor/lib64",
+    ],
+
+    arch: {
+        x86: {
+            cflags: [
+                "-DVA_DRIVERS_PATH=\"/vendor/lib\"",
+            ],
+        },
+
+        x86_64: {
+            cflags: [
+                "-DVA_DRIVERS_PATH=\"/vendor/lib64\"",
+            ],
+        }
+    },
+
+    shared_libs: [
+        "libdl",
+        "libdrm",
+        "libcutils",
+        "liblog",
+    ],
+
+    export_include_dirs: [
+        "va",
+        "va/drm",
+    ],
+
+    vendor: true,
+
+    owner: "intel",
+}
+
+cc_library_shared {
+    name: "libva-android-bp",
+
+    local_include_dirs: [
+        "va",
+        "va/drm",
+    ],
+
+    srcs: [
+        "va/android/va_android.cpp",
+        "va/drm/va_drm_utils.c",
+    ],
+
+    shared_libs: [
+        "libva_bp",
+        "libdrm",
+        "liblog",
+    ],
+
+    export_include_dirs: [
+        "va",
+        "va/drm",
+    ],
+
+    vendor: true,
+
+    owner: "intel",
+}
