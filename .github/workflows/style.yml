@@ -1,7 +1,7 @@
 name: style
 
 on: [push, pull_request]
-
+permissions: read-all
 jobs:
   style-check:
     runs-on: ubuntu-22.04

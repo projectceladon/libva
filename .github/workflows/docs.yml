@@ -9,7 +9,7 @@ on:
     paths-ignore:
     - '.github/workflows/**'
     - '!.github/workflows/docs.yml'
-
+permissions: read-all
 jobs:
   build:
     runs-on: ubuntu-22.04
