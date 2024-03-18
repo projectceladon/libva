@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   CFLAGS: -Wall -Werror
-
+permissions: read-all
 jobs:
   test:
     strategy:
