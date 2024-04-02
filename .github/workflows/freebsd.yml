@@ -1,7 +1,7 @@
 name: freebsd
 
 on: [push, pull_request]
-
+permissions: read-all
 jobs:
   freebsd:
     runs-on: macos-12
