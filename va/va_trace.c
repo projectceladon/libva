@@ -1096,6 +1096,11 @@ void va_TraceInitialize(
 {
     DPY2TRACE_VIRCTX(dpy);
     TRACE_FUNCNAME(idx);
+
+    const char* vendor_string = vaQueryVendorString(dpy);
+    if (vendor_string)
+        va_TraceMsg(trace_ctx, "==========\tVA-API vendor string: %s\n", vendor_string);
+
     DPY2TRACE_VIRCTX_EXIT(pva_trace);
 }
 
@@ -1235,13 +1240,38 @@ static void va_TraceSurfaceAttributes(
                     va_TraceMsg(trace_ctx, "\t\t  width=%d\n", tmp->width);
                     va_TraceMsg(trace_ctx, "\t\t  height=%d\n", tmp->height);
                     va_TraceMsg(trace_ctx, "\t\t  num_objects=0x%08x\n", tmp->num_objects);
-                    for (j = 0; j < tmp->num_objects; j++) {
+                    for (j = 0; j < tmp->num_objects && tmp->num_objects <= 4; j++) {
                         va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].fd=%d\n", j, tmp->objects[j].fd);
                         va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].size=%d\n", j, tmp->objects[j].size);
-                        va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].drm_format_modifier=%d\n", j, tmp->objects[j].drm_format_modifier);
+                        va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].drm_format_modifier=%llx\n", j, tmp->objects[j].drm_format_modifier);
                     }
                     va_TraceMsg(trace_ctx, "\t\t  num_layers=%d\n", tmp->num_layers);
-                    for (j = 0; j < tmp->num_layers; j++) {
+                    for (j = 0; j < tmp->num_layers && tmp->num_layers <= 4; j++) {
+                        va_TraceMsg(trace_ctx, "\t\t\tlayers[%d].drm_format=0x%08x\n", j, tmp->layers[j].drm_format);
+                        va_TraceMsg(trace_ctx, "\t\t\tlayers[%d].num_planes=0x%d\n", j, tmp->layers[j].num_planes);
+                        for (k = 0; k < 4; k++) {
+                            va_TraceMsg(trace_ctx, "\t\t\t\tlayers[%d].object_index[%d]=0x%d\n", j, k, tmp->layers[j].object_index[k]);
+                            va_TraceMsg(trace_ctx, "\t\t\t\tlayers[%d].offset[%d]=0x%d\n", j, k, tmp->layers[j].offset[k]);
+                            va_TraceMsg(trace_ctx, "\t\t\t\tlayers[%d].pitch[%d]=0x%d\n", j, k, tmp->layers[j].pitch[k]);
+                        }
+                    }
+                } else if (memtype == VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_3) {
+                    VADRMPRIME3SurfaceDescriptor *tmp = (VADRMPRIME3SurfaceDescriptor *) p->value.value.p;
+                    uint32_t j, k;
+
+                    va_TraceMsg(trace_ctx, "\t\t--VADRMPRIME3SurfaceDescriptor\n");
+                    va_TraceMsg(trace_ctx, "\t\t  pixel_format=0x%08x\n", tmp->fourcc);
+                    va_TraceMsg(trace_ctx, "\t\t  width=%d\n", tmp->width);
+                    va_TraceMsg(trace_ctx, "\t\t  height=%d\n", tmp->height);
+                    va_TraceMsg(trace_ctx, "\t\t  num_objects=0x%08x\n", tmp->num_objects);
+                    va_TraceMsg(trace_ctx, "\t\t  flags=0x%08x\n", tmp->flags);
+                    for (j = 0; j < tmp->num_objects && tmp->num_objects <= 4; j++) {
+                        va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].fd=%d\n", j, tmp->objects[j].fd);
+                        va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].size=%d\n", j, tmp->objects[j].size);
+                        va_TraceMsg(trace_ctx, "\t\t\tobjects[%d].drm_format_modifier=%llx\n", j, tmp->objects[j].drm_format_modifier);
+                    }
+                    va_TraceMsg(trace_ctx, "\t\t  num_layers=%d\n", tmp->num_layers);
+                    for (j = 0; j < tmp->num_layers && tmp->num_layers <= 4; j++) {
                         va_TraceMsg(trace_ctx, "\t\t\tlayers[%d].drm_format=0x%08x\n", j, tmp->layers[j].drm_format);
                         va_TraceMsg(trace_ctx, "\t\t\tlayers[%d].num_planes=0x%d\n", j, tmp->layers[j].num_planes);
                         for (k = 0; k < 4; k++) {
@@ -1735,7 +1765,8 @@ static void va_TraceCodedBufferIVFHeader(struct trace_context *trace_ctx, void *
 void va_TraceMapBuffer(
     VADisplay dpy,
     VABufferID buf_id,    /* in */
-    void **pbuf           /* out */
+    void **pbuf,          /* out */
+    uint32_t flags       /* in */
 )
 {
     VABufferType type;
@@ -1756,6 +1787,7 @@ void va_TraceMapBuffer(
     TRACE_FUNCNAME(idx);
     va_TraceMsg(trace_ctx, "\tbuf_id=0x%x\n", buf_id);
     va_TraceMsg(trace_ctx, "\tbuf_type=%s\n", vaBufferTypeStr(type));
+    va_TraceMsg(trace_ctx, "\tflags = 0x%x\n", flags);
     if ((pbuf == NULL) || (*pbuf == NULL))
         return;
 
@@ -5975,7 +6007,7 @@ void va_TraceSyncSurface2(
     TRACE_FUNCNAME(idx);
 
     va_TraceMsg(trace_ctx, "\tsurface = 0x%08x\n", surface);
-    va_TraceMsg(trace_ctx, "\ttimeout_ns = %d\n", timeout_ns);
+    va_TraceMsg(trace_ctx, "\ttimeout_ns = %lld\n", timeout_ns);
     va_TraceMsg(trace_ctx, NULL);
 
     DPY2TRACE_VIRCTX_EXIT(pva_trace);
@@ -6056,7 +6088,7 @@ void va_TraceSyncBuffer(
     TRACE_FUNCNAME(idx);
 
     va_TraceMsg(trace_ctx, "\tbuf_id = 0x%08x\n", buf_id);
-    va_TraceMsg(trace_ctx, "\ttimeout_ns = %d\n", timeout_ns);
+    va_TraceMsg(trace_ctx, "\ttimeout_ns = %lld\n", timeout_ns);
     va_TraceMsg(trace_ctx, NULL);
 
     DPY2TRACE_VIRCTX_EXIT(pva_trace);
@@ -6236,7 +6268,7 @@ void va_TraceEvent(
     write_size = VA_TRACE_HEADER_SIZE;
     for (i = 0; i < num; i++) {
         if (write_size + desc[i].size > VA_TRACE_MAX_SIZE) {
-            va_errorMessage(pva_trace->dpy, "error: trace event %d carry too big data. max size \n", id, VA_TRACE_MAX_SIZE);
+            va_errorMessage(pva_trace->dpy, "error: trace event %d carry too big data. max size %d \n", id, VA_TRACE_MAX_SIZE);
             break;
         }
         if (desc[i].buf) {
@@ -6310,4 +6342,56 @@ void va_TraceEventBuffers(
         }
     }
     return;
+}
+
+void va_TraceExportSurfaceHandle(
+    VADisplay        dpy,
+    VASurfaceID      surfaceId,
+    uint32_t         memType,
+    uint32_t         flags,
+    void             *descriptor)
+{
+    int i;
+
+    DPY2TRACE_VIRCTX(dpy);
+
+    TRACE_FUNCNAME(idx);
+
+    va_TraceMsg(trace_ctx, "\tsurfaceId = 0x%08x\n", surfaceId);
+    va_TraceMsg(trace_ctx, "\tmemType   = 0x%08x\n", memType);
+    va_TraceMsg(trace_ctx, "\tflags     = 0x%08x\n", flags);
+
+    if (memType != VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2 && memType != VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_3) {
+        DPY2TRACE_VIRCTX_EXIT(pva_trace);
+        return;
+    }
+
+    VADRMPRIMESurfaceDescriptor *desc = (VADRMPRIMESurfaceDescriptor *)descriptor;
+
+    if (!desc) {
+        DPY2TRACE_VIRCTX_EXIT(pva_trace);
+        return;
+    }
+
+    va_TraceMsg(trace_ctx, "\tfourcc      = %u\n", desc->fourcc);
+    va_TraceMsg(trace_ctx, "\twidth       = %u\n", desc->width);
+    va_TraceMsg(trace_ctx, "\theight      = %u\n", desc->height);
+
+    va_TraceMsg(trace_ctx, "\tnum_objects = %u\n", desc->num_objects);
+    for (i = 0; i < desc->num_objects; i++) {
+        va_TraceMsg(trace_ctx, "\tobject %d, fd       = %d\n", i, desc->objects[i].fd);
+        va_TraceMsg(trace_ctx, "\tobject %d, size     = %u\n", i, desc->objects[i].size);
+        va_TraceMsg(trace_ctx, "\tobject %d, modifier = 0x%llx\n", i, desc->objects[i].drm_format_modifier);
+    }
+
+    va_TraceMsg(trace_ctx, "\tnum_objects = %u\n", desc->num_layers);
+    for (i = 0; i < desc->num_layers; i++) {
+        va_TraceMsg(trace_ctx, "\tlayer %d, drm_format = %d\n", i, desc->layers[i].drm_format);
+        va_TraceMsg(trace_ctx, "\tlayer %d, size       = %u\n", i, desc->layers[i].num_planes);
+        va_TraceMsg(trace_ctx, "\tlayer %d, object idx = [%d, %d, %d, %d]\n", i, desc->layers[i].object_index[0], desc->layers[i].object_index[1], desc->layers[i].object_index[2], desc->layers[i].object_index[3]);
+        va_TraceMsg(trace_ctx, "\tlayer %d, offset     = [%d, %d, %d, %d]\n", i, desc->layers[i].offset[0], desc->layers[i].offset[1], desc->layers[i].offset[2], desc->layers[i].offset[3]);
+        va_TraceMsg(trace_ctx, "\tlayer %d, pitch      = [%d, %d, %d, %d]\n", i, desc->layers[i].pitch[0], desc->layers[i].pitch[1], desc->layers[i].pitch[2], desc->layers[i].pitch[3]);
+    }
+
+    DPY2TRACE_VIRCTX_EXIT(pva_trace);
 }

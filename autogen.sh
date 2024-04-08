@@ -23,6 +23,13 @@
 
 PROJECT="libva"
 
+# for `meson dist`
+if test -z "$srcdir"; then
+    srcdir="$MESON_PROJECT_DIST_ROOT"
+    test -n "$srcdir" || srcdir="$MESON_DIST_ROOT"
+    test -n "$srcdir" && NOCONFIGURE=1
+fi
+
 test -n "$srcdir" || srcdir="`dirname \"$0\"`"
 test -n "$srcdir" || srcdir=.
 
@@ -36,7 +43,7 @@ cd "$srcdir"
 
 mkdir -p m4
 
-AUTORECONF=`which autoreconf`
+AUTORECONF=`command -v autoreconf`
 if test -z $AUTORECONF; then
     echo "*** No autoreconf found ***"
     exit 1

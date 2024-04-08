@@ -305,7 +305,7 @@ typedef int VAStatus;   /** Return status type from functions */
 #define VA_STATUS_ERROR_NOT_ENOUGH_BUFFER       0x00000025
 /** \brief Indicate an operation isn't completed because time-out interval elapsed. */
 #define VA_STATUS_ERROR_TIMEDOUT                0x00000026
-#define VA_STATUS_ERROR_UNKNOWN         0xFFFFFFFF
+#define VA_STATUS_ERROR_UNKNOWN                 0xFFFFFFFF
 
 /**
  * 1. De-interlacing flags for vaPutSurface()
@@ -669,8 +669,8 @@ typedef enum {
      * at vaBeginPicture() time refers to the decode output surface.  The
      * target surface for the output of processing needs to be a different
      * surface since the decode process requires the original reconstructed buffer.
-     * The “surface” member of VAProcPipelineParameterBuffer should be set to the
-     * same as “render_target” set in vaBeginPicture(), but the driver may choose
+     * The "surface" member of VAProcPipelineParameterBuffer should be set to the
+     * same as "render_target" set in vaBeginPicture(), but the driver may choose
      * to ignore this parameter.
      */
     VAConfigAttribDecProcessing     = 8,
@@ -1036,6 +1036,20 @@ typedef enum {
      * The value returned uses the VAConfigAttribValEncPerBlockControl type.
      */
     VAConfigAttribEncPerBlockControl    = 55,
+    /**
+     * \brief Maximum number of tile rows. Read-only.
+     *
+     * This attribute determines the maximum number of tile
+     * rows supported for encoding with tile support.
+     */
+    VAConfigAttribEncMaxTileRows        = 56,
+    /**
+     * \brief Maximum number of tile cols. Read-only.
+     *
+     * This attribute determines the maximum number of tile
+     * columns supported for encoding with tile support.
+     */
+    VAConfigAttribEncMaxTileCols        = 57,
     /**@}*/
     VAConfigAttribTypeMax
 } VAConfigAttribType;
@@ -1151,8 +1165,10 @@ typedef union _VAConfigAttribValDecJPEG {
     struct {
         /** \brief Set to (1 << VA_ROTATION_xxx) for supported rotation angles. */
         uint32_t rotation : 4;
+        /** \brief set to 1 for crop and partial decode support, 0 if not supported */
+        uint32_t crop : 1;
         /** \brief Reserved for future use. */
-        uint32_t reserved : 28;
+        uint32_t reserved : 27;
     } bits;
     uint32_t value;
 } VAConfigAttribValDecJPEG;
@@ -1683,6 +1699,15 @@ typedef enum {
      * when importing an existing buffer.
      */
     VASurfaceAttribDRMFormatModifiers,
+    /** \brief width and height log2 aligment in pixels (int, read-only)
+     *
+     * For special HW requirement used in some codecs, if
+     * VASurfaceAttribAlignmentSize is not implemented in the driver, then
+     * the surface_width and surface_height should keep the original logic
+     * without any modification, this is an add-on requirement to
+     * surface_width and surface_height.
+     */
+    VASurfaceAttribAlignmentSize,
     /** \brief Number of surface attributes. */
     VASurfaceAttribCount
 } VASurfaceAttribType;
@@ -1711,6 +1736,20 @@ typedef struct _VASurfaceAttrib {
 /** \brief User pointer memory type is supported. */
 #define VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR     0x00000004
 /**@}*/
+/**
+ * \brief VASurfaceAttribAlignmentStruct structure for
+ * the VASurfaceAttribAlignmentSize attribute.
+ */
+typedef union _VASurfaceAttribAlignmentStruct {
+    struct {
+        /** \brief log2 width aligment */
+        uint32_t log2_width_alignment  : 4;
+        /** \brief log2 height aligment */
+        uint32_t log2_height_alignment : 4;
+        uint32_t reserved              : 24;
+    } bits;
+    uint32_t value;
+} VASurfaceAttribAlignmentStruct;
 
 /**
  * \brief VASurfaceAttribExternalBuffers structure for
@@ -3879,6 +3918,28 @@ VAStatus vaMapBuffer(
 );
 
 /**
+ * Map data store of the buffer into the client's address space
+ * this interface could be used to convey the operation hint
+ * backend driver could use these hint to optimize the implementations
+ */
+
+/** \brief VA_MAPBUFFER_FLAG_DEFAULT is used when there are no flag specified
+ * same as VA_MAPBUFFER_FLAG_READ | VA_MAPBUFFER_FLAG_WRITE.
+ */
+#define VA_MAPBUFFER_FLAG_DEFAULT 0
+/** \brief application will read the surface after map */
+#define VA_MAPBUFFER_FLAG_READ    1
+/** \brief application will write the surface after map */
+#define VA_MAPBUFFER_FLAG_WRITE   2
+
+VAStatus vaMapBuffer2(
+    VADisplay dpy,
+    VABufferID buf_id,  /* in */
+    void **pbuf,        /* out */
+    uint32_t flags      /* in */
+);
+
+/**
  * After client making changes to a mapped data store, it needs to
  * "Unmap" it to let the server know that the data is ready to be
  * consumed by the server
@@ -4205,6 +4266,7 @@ VAStatus vaQuerySurfaceStatus(
 typedef enum {
     VADecodeSliceMissing            = 0,
     VADecodeMBError                 = 1,
+    VADecodeReset                   = 2,
 } VADecodeErrorType;
 
 /**
@@ -4224,9 +4286,15 @@ typedef struct _VASurfaceDecodeMBErrors {
 /**
  * After the application gets VA_STATUS_ERROR_DECODING_ERROR after calling vaSyncSurface(),
  * it can call vaQuerySurfaceError to find out further details on the particular error.
- * VA_STATUS_ERROR_DECODING_ERROR should be passed in as "error_status",
- * upon the return, error_info will point to an array of _VASurfaceDecodeMBErrors structure,
- * which is allocated and filled by libVA with detailed information on the missing or error macroblocks.
+ * VA_STATUS_ERROR_DECODING_ERROR should be passed in as "error_status".
+ *
+ * After the applications get VA_STATUS_HW_BUSY or VA_STATUS_SUCCESSFULL from vaSyncSurface(),
+ * it still can call vaQuerySurfaceError to find out further details to know if has real hw reset
+ * happened on this surface since umd and kmd could recover the context from reset with success in sometimes.
+ * VA_STATUS_HW_BUSY or VA_STATUS_SUCCESSFULL also could be passed in as "error_status".
+ *
+ * Upon the return, error_info will point to an array of _VASurfaceDecodeMBErrors structure,
+ * which is allocated and filled by libVA with detailed information on the VADecodeErrorType.
  * The array is terminated if "status==-1" is detected.
  */
 VAStatus vaQuerySurfaceError(
@@ -4574,6 +4642,11 @@ VAStatus vaSyncBuffer(
  * Four bytes per pixel: X, Y, U, V.
  */
 #define VA_FOURCC_XYUV          0x56555958
+/** Q416: three-plane 16-bit YUV 4:4:4.
+ *
+ * The three planes contain Y, U and V respectively.
+ */
+#define VA_FOURCC_Q416          0x36313451
 
 /* byte order */
 #define VA_LSB_FIRST        1

@@ -353,7 +353,8 @@ DLL_HIDDEN
 void va_TraceMapBuffer(
     VADisplay dpy,
     VABufferID buf_id,  /* in */
-    void **pbuf     /* out */
+    void **pbuf,     /* out */
+    uint32_t flags  /* in */
 );
 
 
@@ -474,7 +475,6 @@ void va_TracePutSurface(
     unsigned int flags /* de-interlacing flags */
 );
 
-DLL_HIDDEN
 void va_TraceStatus(VADisplay dpy, const char * funcName, VAStatus status);
 
 /** \brief va_TraceEvent
@@ -495,6 +495,16 @@ void va_TraceEventBuffers(
     VAContextID context,
     int num_buffers,
     VABufferID *buffers);
+
+/** \brief va_TraceExportSurfaceHandle
+ * trace exported surface handle. */
+DLL_HIDDEN
+void va_TraceExportSurfaceHandle(
+    VADisplay        dpy,
+    VASurfaceID      surfaceId,
+    uint32_t         memType,
+    uint32_t         flags,
+    void             *descriptor);
 
 #ifdef __cplusplus
 }

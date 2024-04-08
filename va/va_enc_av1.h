@@ -656,8 +656,12 @@ typedef struct  _VAEncPictureParameterBufferAV1 {
              * Otherwise disable palette encoding.
              */
             uint32_t    palette_mode_enable             : 1;
+            /** \brief Corresponds to AV1 syntax element of the same name. */
+            uint32_t    allow_screen_content_tools      : 1;
+            /** \brief Corresponds to AV1 syntax element of the same name. */
+            uint32_t    force_integer_mv                : 1;
             /** \brief Reserved bytes for future use, must be zero. */
-            uint32_t    reserved                        : 18;
+            uint32_t    reserved                        : 16;
         } bits;
         uint32_t value;
     } picture_flags;
@@ -912,7 +916,8 @@ typedef struct  _VAEncPictureParameterBufferAV1 {
      *  underline encoder. Otherwise, app can set it to 0 and ignored by driver.
      *
      *  In BRC mode, obu_size needs to be updated and this parameter should be set.
-     *  In CQP mode, this parameter should be set to 0 and ignored by driver.
+     *  In CQP mode, obu_size needs to be updated if \c enable_frame_obu == 1. Otherwise
+     *  this parameter should be set to 0 and ignored by driver.
      */
     uint32_t    byte_offset_frame_hdr_obu_size;
 

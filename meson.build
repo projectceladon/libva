@@ -7,7 +7,7 @@
 # - reset micro version to zero when VA-API major or minor version is changed
 project(
   'libva', 'c',
-  version : '2.19.0',
+  version : '2.21.0',
   meson_version : '>= 0.53.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
@@ -19,7 +19,7 @@ project(
 # - reset micro version to zero when minor version is incremented
 # - reset minor version to zero when major version is incremented
 va_api_major_version = 1
-va_api_minor_version = 19
+va_api_minor_version = 21
 va_api_micro_version = 0
 
 va_api_version = '@0@.@1@.@2@'.format(va_api_major_version,
@@ -157,3 +157,5 @@ doxygen = find_program('doxygen', required: false)
 if get_option('enable_docs') and doxygen.found()
   subdir('doc')
 endif
+
+meson.add_dist_script('./autogen.sh')
