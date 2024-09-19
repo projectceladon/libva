@@ -25,6 +25,23 @@
 #ifndef VA_INTERNAL_H
 #define VA_INTERNAL_H
 
+#ifdef ANDROID
+#include <log/log.h>
+
+#define va_loge(format, ...) ALOGE(format, ##__VA_ARGS__)
+#define va_logi(format, ...) ALOGI(format, ##__VA_ARGS__)
+#define va_logv(format, ...) ALOGV(format, ##__VA_ARGS__)
+#define va_logd(format, ...) ALOGD(format, ##__VA_ARGS__)
+
+#else
+
+#define va_loge(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
+#define va_logi(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+#define va_logv(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+#define va_logd(format, ...) fprintf(stdout, format, ##__VA_ARGS__)
+
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
