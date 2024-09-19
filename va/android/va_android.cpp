@@ -39,10 +39,10 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <xf86drm.h>
 
 
 #define CHECK_SYMBOL(func) { if (!func) printf("func %s not found\n", #func); return VA_STATUS_ERROR_UNKNOWN; }
-#define DEVICE_NAME "/dev/dri/renderD128"
 
 static void va_DisplayContextDestroy(
     VADisplayContextP pDisplayContext
@@ -62,17 +62,50 @@ static void va_DisplayContextDestroy(
     free(pDisplayContext);
 }
 
+static int va_SelectIntelDevice()
+{
+    int intel_gpu_index = -1;
+    for (int i = 0; i < 16; ++i) {
+        char device_path[64];
+        sprintf(device_path, "/dev/dri/renderD%d", 128 + i);
+        int temp = open(device_path, O_RDWR | O_CLOEXEC);
+        if (temp == -1) {
+            continue;
+        }
+        drmVersionPtr version = drmGetVersion(temp);
+        if (version == nullptr) {
+            close(temp);
+            continue;
+        }
+        if (strncmp(version->name, "i915", strlen("i915")) == 0) {
+            intel_gpu_index = i;
+            drmFreeVersion(version);
+            close(temp);
+            break;
+        }
+        drmFreeVersion(version);
+        close(temp);
+    }
+    return intel_gpu_index;
+}
+
 static VAStatus va_DisplayContextConnect(
     VADisplayContextP pDisplayContext
 )
 {
     VADriverContextP const ctx = pDisplayContext->pDriverContext;
     struct drm_state * const drm_state = (struct drm_state *)ctx->drm_state;
-
-    drm_state->fd = open(DEVICE_NAME, O_RDWR | O_CLOEXEC);
+    int device_node_id = va_SelectIntelDevice();
+    if (device_node_id < 0) {
+        va_loge("Cannot find candidate DRM device\n");
+        return VA_STATUS_ERROR_UNKNOWN;
+    }
+    char device_name[64];
+    sprintf(device_name, "/dev/dri/renderD%d", 128 + device_node_id);
+    drm_state->fd = open(device_name, O_RDWR | O_CLOEXEC);
     if (drm_state->fd < 0) {
         fprintf(stderr, "Cannot open DRM device '%s': %d, %s\n",
-                DEVICE_NAME, errno, strerror(errno));
+                device_name, errno, strerror(errno));
         return VA_STATUS_ERROR_UNKNOWN;
     }
     drm_state->auth_type = VA_DRM_AUTH_CUSTOM;
