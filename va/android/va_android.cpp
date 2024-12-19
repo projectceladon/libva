@@ -40,6 +40,11 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <xf86drm.h>
+#include <i915_drm.h>
+
+#if defined(ANDROID)
+#include <cutils/properties.h>
+#endif
 
 
 #define CHECK_SYMBOL(func) { if (!func) printf("func %s not found\n", #func); return VA_STATUS_ERROR_UNKNOWN; }
@@ -62,8 +67,61 @@ static void va_DisplayContextDestroy(
     free(pDisplayContext);
 }
 
+static int va_IsIntelDgpu(int fd)
+{
+    struct drm_i915_query_item item = {
+        .query_id = DRM_I915_QUERY_MEMORY_REGIONS,
+    };
+
+    struct drm_i915_query query = {
+        .num_items = 1, .items_ptr = (uintptr_t)&item,
+    };
+    if (drmIoctl(fd, DRM_IOCTL_I915_QUERY, &query)) {
+        va_loge("drv: Failed to DRM_IOCTL_I915_QUERY");
+        return 0;
+    }
+
+    struct drm_i915_query_memory_regions *meminfo = (struct drm_i915_query_memory_regions *)calloc(1, item.length);
+    if (!meminfo) {
+        va_loge("drv: %s Exit due to memory allocation failure", __func__);
+        return 0;
+    }
+
+    item.data_ptr = (uintptr_t)meminfo;
+    if (drmIoctl(fd, DRM_IOCTL_I915_QUERY, &query) || item.length <= 0) {
+        free(meminfo);
+        va_loge("%s:%d DRM_IOCTL_I915_QUERY error", __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    int has_sys = 0, has_local = 0;
+    for (uint32_t i = 0; i < meminfo->num_regions; i++) {
+        const struct drm_i915_memory_region_info *mem = &meminfo->regions[i];
+        switch (mem->region.memory_class) {
+        case I915_MEMORY_CLASS_SYSTEM:
+            has_sys = 1;
+            break;
+        case I915_MEMORY_CLASS_DEVICE:
+            has_local = 1;
+            break;
+        default:
+            break;
+        }
+    }
+
+    free(meminfo);
+    return has_local;
+}
 static int va_SelectIntelDevice()
 {
+    int use_dgpu = 1;
+#if defined(ANDROID)
+    char value[PROPERTY_VALUE_MAX] = {};
+
+    property_get("video.hw.dgpu", value, "1");
+    use_dgpu = atoi(value);
+#endif
+
     int intel_gpu_index = -1;
     for (int i = 0; i < 16; ++i) {
         char device_path[64];
@@ -79,9 +137,14 @@ static int va_SelectIntelDevice()
         }
         if (strncmp(version->name, "i915", strlen("i915")) == 0) {
             intel_gpu_index = i;
-            drmFreeVersion(version);
-            close(temp);
-            break;
+            // If specify to use dgpu and found dgpu, return the first found dgpu,
+            // otherwise use the last available intel node for codec
+            if (use_dgpu && va_IsIntelDgpu(temp)) {
+                drmFreeVersion(version);
+                close(temp);
+                va_logd("%s:%d find dgpu", __FUNCTION__, __LINE__);
+                break;
+            }
         }
         drmFreeVersion(version);
         close(temp);
@@ -100,11 +163,12 @@ static VAStatus va_DisplayContextConnect(
         va_loge("Cannot find candidate DRM device\n");
         return VA_STATUS_ERROR_UNKNOWN;
     }
+
     char device_name[64];
     sprintf(device_name, "/dev/dri/renderD%d", 128 + device_node_id);
     drm_state->fd = open(device_name, O_RDWR | O_CLOEXEC);
     if (drm_state->fd < 0) {
-        fprintf(stderr, "Cannot open DRM device '%s': %d, %s\n",
+        va_loge("Cannot open DRM device '%s': %d, %s\n",
                 device_name, errno, strerror(errno));
         return VA_STATUS_ERROR_UNKNOWN;
     }
