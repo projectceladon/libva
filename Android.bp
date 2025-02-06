@@ -92,6 +92,7 @@ cc_library_shared {
         "libva",
         "libdrm",
         "liblog",
+        "libcutils",
     ],
 
     local_include_dirs: [
