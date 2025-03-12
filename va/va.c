@@ -45,11 +45,13 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #define DRIVER_EXTENSION    "_drv_video.so"
+#define DRIVER_EXTENSION_1    "_drv_video_1.so"
 #define DRIVER_PATH_STRING  "%s/%s%s"
 #define ENV_VAR_SEPARATOR ":"
 #endif
 #ifdef ANDROID
 #include <log/log.h>
+#include <cutils/properties.h>
 #endif
 
 #define ASSERT      assert
@@ -355,14 +357,30 @@ va_getDriverInitName(char *name, int namelen, int major, int minor)
 
 static char *va_getDriverPath(const char *driver_dir, const char *driver_name)
 {
-    int n = snprintf(0, 0, DRIVER_PATH_STRING, driver_dir, driver_name, DRIVER_EXTENSION);
+    char property[PROPERTY_VALUE_MAX];
+    int n = -1;
+    memset(property, 0 , PROPERTY_VALUE_MAX);
+    property_get("ro.boot.mcd", property, "false");
+    if (!strcmp("true", property)) {
+        n = snprintf(0, 0, DRIVER_PATH_STRING, driver_dir, driver_name, DRIVER_EXTENSION_1);
+    } else {
+        n = snprintf(0, 0, DRIVER_PATH_STRING, driver_dir, driver_name, DRIVER_EXTENSION);
+    }
+
     if (n < 0)
         return NULL;
     char *driver_path = (char *) malloc(n + 1);
     if (!driver_path)
         return NULL;
-    n = snprintf(driver_path, n + 1, DRIVER_PATH_STRING,
-                 driver_dir, driver_name, DRIVER_EXTENSION);
+
+    if (!strcmp("true", property)) {
+        n = snprintf(driver_path, n + 1, DRIVER_PATH_STRING,
+            driver_dir, driver_name, DRIVER_EXTENSION_1);
+    } else {
+        n = snprintf(driver_path, n + 1, DRIVER_PATH_STRING,
+            driver_dir, driver_name, DRIVER_EXTENSION);
+    }
+
     if (n < 0) {
         free(driver_path);
         return NULL;
