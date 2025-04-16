@@ -114,11 +114,11 @@ static int va_IsIntelDgpu(int fd)
 }
 static int va_SelectIntelDevice()
 {
-    int use_dgpu = 1;
+    int use_dgpu;
 #if defined(ANDROID)
     char value[PROPERTY_VALUE_MAX] = {};
 
-    property_get("video.hw.dgpu", value, "1");
+    property_get("vendor.video.hw.dgpu", value, "1");
     use_dgpu = atoi(value);
 #endif
 
@@ -138,11 +138,18 @@ static int va_SelectIntelDevice()
         if (strncmp(version->name, "i915", strlen("i915")) == 0) {
             intel_gpu_index = i;
             // If specify to use dgpu and found dgpu, return the first found dgpu,
+            // else if specify to use igpu and found igpu, return the first found igpu,
             // otherwise use the last available intel node for codec
             if (use_dgpu && va_IsIntelDgpu(temp)) {
                 drmFreeVersion(version);
                 close(temp);
-                va_logd("%s:%d find dgpu", __FUNCTION__, __LINE__);
+                va_logd("-ZCY- %s:%d find dgpu", __FUNCTION__, __LINE__);
+                break;
+            }
+            if (!use_dgpu && !va_IsIntelDgpu(temp)) {
+                va_logd("-ZCY- %s:%d find igpu", __FUNCTION__, __LINE__);
+                drmFreeVersion(version);
+                close(temp);
                 break;
             }
         }
