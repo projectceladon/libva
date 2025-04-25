@@ -118,7 +118,7 @@ static int va_SelectIntelDevice()
 #if defined(ANDROID)
     char value[PROPERTY_VALUE_MAX] = {};
 
-    property_get("video.hw.dgpu", value, "1");
+    property_get("vendor.video.hw.dgpu", value, "1");
     use_dgpu = atoi(value);
 #endif
 
@@ -143,11 +143,11 @@ static int va_SelectIntelDevice()
             if (use_dgpu && va_IsIntelDgpu(temp)) {
                 drmFreeVersion(version);
                 close(temp);
-                va_logd("%s:%d find dgpu", __FUNCTION__, __LINE__);
+                va_logd("find dgpu");
                 break;
             }
             if (!use_dgpu && !va_IsIntelDgpu(temp)) {
-                va_logd("%s:%d find igpu", __FUNCTION__, __LINE__);
+                va_logd("find igpu");
                 drmFreeVersion(version);
                 close(temp);
                 break;
