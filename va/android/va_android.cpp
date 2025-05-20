@@ -41,6 +41,7 @@
 #include <errno.h>
 #include <xf86drm.h>
 #include <i915_drm.h>
+#include <xe_drm.h>
 
 #if defined(ANDROID)
 #include <cutils/properties.h>
@@ -112,6 +113,43 @@ static int va_IsIntelDgpu(int fd)
     free(meminfo);
     return has_local;
 }
+
+static int va_IsIntelXeDgpu(int fd) {
+    struct drm_xe_device_query query = {
+        .query = DRM_XE_DEVICE_QUERY_MEM_REGIONS,
+    };
+
+    if (drmIoctl(fd, DRM_IOCTL_XE_DEVICE_QUERY, &query)) {
+        va_loge("ioctl: DRM_IOCTL_XE_QUERY query fail\n");
+        return false;
+    }
+
+    struct drm_xe_query_mem_regions *regions = (struct drm_xe_query_mem_regions *)calloc(1, query.size);
+
+    if (!regions) {
+        va_loge("calloc drm_xe_query_memory_regions fail\n");
+        return false;
+    }
+
+    query.data = (uintptr_t)regions;
+    if (drmIoctl(fd, DRM_IOCTL_XE_DEVICE_QUERY, &query)) {
+        free(regions);
+        va_loge("ioctl: DRM_IOCTL_XE_QUERY alloc fail\n");
+        return false;
+    }
+
+    bool has_lmem = false;
+    for (int i = 0; i < regions->num_mem_regions; i++) {
+        if (regions->mem_regions[i].mem_class == DRM_XE_MEM_REGION_CLASS_VRAM) {
+            has_lmem = true;
+            break;
+        }
+    }
+
+    free(regions);
+    return has_lmem;
+}
+
 static int va_SelectIntelDevice()
 {
     int use_dgpu = 1;
@@ -148,6 +186,20 @@ static int va_SelectIntelDevice()
             }
             if (!use_dgpu && !va_IsIntelDgpu(temp)) {
                 va_logd("%s:%d find igpu", __FUNCTION__, __LINE__);
+                drmFreeVersion(version);
+                close(temp);
+                break;
+            }
+        } else if (strncmp(version->name, "xe", strlen("xe")) == 0) {
+            intel_gpu_index = i;
+            if (use_dgpu && va_IsIntelXeDgpu(temp)) {
+                drmFreeVersion(version);
+                close(temp);
+                va_logd("%s:%d find xe dgpu", __FUNCTION__, __LINE__);
+                break;
+            }
+            if (!use_dgpu && !va_IsIntelXeDgpu(temp)) {
+                va_logd("%s:%d find xe igpu", __FUNCTION__, __LINE__);
                 drmFreeVersion(version);
                 close(temp);
                 break;
