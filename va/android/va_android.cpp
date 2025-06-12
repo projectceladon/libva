@@ -118,7 +118,7 @@ static int va_SelectIntelDevice()
 #if defined(ANDROID)
     char value[PROPERTY_VALUE_MAX] = {};
 
-    property_get("video.hw.dgpu", value, "1");
+    property_get("video.hw.dgpu", value, "0");
     use_dgpu = atoi(value);
 #endif
 
