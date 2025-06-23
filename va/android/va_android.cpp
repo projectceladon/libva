@@ -114,12 +114,23 @@ static int va_IsIntelDgpu(int fd)
 }
 static int va_SelectIntelDevice()
 {
-    int use_dgpu = 1;
+    int use_dgpu = 0;
 #if defined(ANDROID)
-    char value[PROPERTY_VALUE_MAX] = {};
-
-    property_get("video.hw.dgpu", value, "1");
-    use_dgpu = atoi(value);
+    FILE *file;
+    int value;
+    char prop[PROPERTY_VALUE_MAX] = {};
+    file = fopen("/vendor/etc/dgpu-codec.cfg", "r");
+    if (file) {
+        while (fscanf(file, "%49s %d", prop, &value) == 2) {
+            if (!strcmp(prop, "vendor.video.hw.dgpu")) {
+                use_dgpu = value;
+            }
+        }
+        fclose(file);
+    } else {
+        property_get("vendor.video.hw.dgpu", prop, "1");
+        use_dgpu = atoi(prop);
+    }
 #endif
 
     int intel_gpu_index = -1;
@@ -143,11 +154,11 @@ static int va_SelectIntelDevice()
             if (use_dgpu && va_IsIntelDgpu(temp)) {
                 drmFreeVersion(version);
                 close(temp);
-                va_logd("%s:%d find dgpu", __FUNCTION__, __LINE__);
+                va_logd("find dgpu");
                 break;
             }
             if (!use_dgpu && !va_IsIntelDgpu(temp)) {
-                va_logd("%s:%d find igpu", __FUNCTION__, __LINE__);
+                va_logd("find igpu");
                 drmFreeVersion(version);
                 close(temp);
                 break;
